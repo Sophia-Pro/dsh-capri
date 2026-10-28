@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/mojie-macos-v0.1.0.zip"><b>⬇ 下载 .app（macOS，98MB）</b></a>
+  <a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/MoJie-0.1.0-macOS-arm64.zip"><b>⬇ 下载 MoJie-0.1.0-macOS-arm64.zip（98MB）</b></a>
   ·
   <a href="使用说明.md">使用说明</a>
   ·
