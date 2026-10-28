@@ -19,9 +19,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/MoJie-0.1.0-macOS-arm64.zip"><b>⬇ 下载 MoJie-0.1.0-macOS-arm64.zip（98MB）</b></a>
+  <a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/MoJie-0.1.0-macOS-arm64.zip"><b>⬇ 挂件（macOS arm64，98MB）</b></a>
   ·
+  <a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/MoJie-DSH-Plugin-0.1.0.zip"><b>⬇ DSH 插件（9KB）</b></a>
+</p>
+<p align="center">
   <a href="使用说明.md">使用说明</a>
+  ·
+  <a href="玩法.md">玩法与动画</a>
   ·
   <a href="NOTICE.md">来源与致谢</a>
 </p>
@@ -64,6 +69,8 @@
 ## 和 DSH 的关系
 
 `dsh-plugin/` 是桥插件：装进 DeepSeek Harness 后，DSH 里新的一轮、某个工具、等你批准、干完、烧了多少 token，都会变成她的话和动作（面板里那个「琢磨：…」就是她看见你在想什么）。
+
+从 [Release](https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/tag/v0.1.0) 下 `MoJie-DSH-Plugin-0.1.0.zip` 解压，或者直接用仓库里的 `dsh-plugin/`：
 
 ```bash
 cd dsh-plugin && npm install
