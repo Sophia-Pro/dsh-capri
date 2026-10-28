@@ -1,34 +1,32 @@
-# 摩羯 · DSH 桌面挂件
+<div align="center">
+
+# 摩羯 <sub>// RELIC</sub>
+
+**NIGHT CITY · 桌面挂件 · 中文 · 接 DeepSeek Harness**
+
+<img src="docs/media/badge-macos.svg" alt="macOS arm64">
+<img src="docs/media/badge-dsh.svg" alt="DSH">
+<img src="docs/media/badge-zh.svg" alt="中文">
+<img src="docs/media/badge-license.svg" alt="非商业">
+
+<br><br>
+
+<a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/MoJie-0.1.0-macOS-arm64.zip"><b>⬇ 挂件（macOS arm64，98MB）</b></a>
+&nbsp;·&nbsp;
+<a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/MoJie-DSH-Plugin-0.1.0.zip"><b>⬇ DSH 插件（9KB）</b></a>
+
+<br>
+
+<a href="使用说明.md">使用说明</a>
+&nbsp;·&nbsp;
+<a href="玩法.md">玩法与动画</a>
+&nbsp;·&nbsp;
+<a href="NOTICE.md">来源与致谢</a>
+
+</div>
 
 <p align="center">
   <img src="docs/media/hero-2.jpg" alt="开场：她抓住你的屏幕边缘说嗨" width="820">
-</p>
-
-<p align="center">
-</p>
-
-<p align="center">
-  <b>把 DeepSeek Harness 的桌面伴侣做成真的：中文、会坐窗口、会附身、会看卫星。</b>
-</p>
-
-<p align="center">
-  <a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases"><img alt="release" src="https://img.shields.io/github/v/release/Sophia-Pro/dsh-mojie-desktop?label=%E4%B8%8B%E8%BD%BD&color=d31b45"></a>
-  <img alt="platform" src="https://img.shields.io/badge/platform-macOS-000?logo=apple">
-  <img alt="electron" src="https://img.shields.io/badge/Electron-31-47848f?logo=electron">
-  <img alt="license" src="https://img.shields.io/badge/license-%E9%9D%9E%E5%95%86%E7%94%A8-d31b45">
-</p>
-
-<p align="center">
-  <a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/MoJie-0.1.0-macOS-arm64.zip"><b>⬇ 挂件（macOS arm64，98MB）</b></a>
-  ·
-  <a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/MoJie-DSH-Plugin-0.1.0.zip"><b>⬇ DSH 插件（9KB）</b></a>
-</p>
-<p align="center">
-  <a href="使用说明.md">使用说明</a>
-  ·
-  <a href="玩法.md">玩法与动画</a>
-  ·
-  <a href="NOTICE.md">来源与致谢</a>
 </p>
 
 ---
