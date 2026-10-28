@@ -1,0 +1,13 @@
+# dsh-plugin-capri-bridge —— DSH bundle patch
+# 把本插件插进 profile 配置树。安装：
+#   dsh plugin --profile desktop add link:.
+# 然后把 "dsh-plugin-capri-bridge" 加进 profile package.json 的 dsh.profile.bundles。
+
+- insert:
+    - id: capri-bridge
+      name: dsh-plugin-capri-bridge
+      config:
+        port: 47823
+        quota: true
+        quotaEveryMs: 60000
+        log: true

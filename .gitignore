@@ -1,0 +1,6 @@
+node_modules/
+captures/
+*.log
+.DS_Store
+assets/bin/capri-windows
+assets/bin/capri-windows.exe

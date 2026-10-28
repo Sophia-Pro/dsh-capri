@@ -1,0 +1,67 @@
+'use strict';
+
+// The tray menu (and the one she opens when you right-click her), in every language she speaks.
+// The order of this object is the order of the Language submenu.
+
+const TRAY = {
+en: {
+    name: 'English',
+    soundTour: 'Hear the sounds',
+    showAll: 'Play everything',
+    heldOnce: 'Be held',
+    replayIntro: 'Replay the opening',
+    screenPossess: 'Take the screen over',
+    possessOnce: 'Take a window over',
+    sizeAuto: 'Auto (follow screen)',
+    tipIdle: 'idle', tipWork: 'working', tipAlert: 'waiting for you', tipDone: 'done', tipAsleep: 'napping',
+    online: (port) => `Capri — listening on ${port}`,
+    teleport: 'Teleport', satellite: 'Look at the satellite', demo: 'Play demo', help: 'How does it work?',
+    show: 'Bring her back', hide: 'Put her away',
+    size: 'Size', small: 'Small', medium: 'Medium', large: 'Large', sound: 'Sound', mute: 'Mute',
+    soundsDir: 'Open custom sounds folder', screen: 'Screen', wander: 'Wander around when idle',
+    possess: 'Possess my windows', lang: 'Language', auto: 'Automatic (system)', startup: 'Start with Windows',
+    hooksOn: 'Claude Code hooks: installed', hooksOff: 'Install Claude Code hooks',
+    hooksRemove: 'Remove Claude Code hooks', quit: 'Quit',
+  },
+pt: {
+    name: 'Português (Brasil)',
+    soundTour: 'Ouvir os sons',
+    showAll: 'Reproduzir tudo',
+    heldOnce: 'Ser carregada',
+    replayIntro: 'Repetir a abertura',
+    screenPossess: 'Possuir a tela',
+    possessOnce: 'Possuir uma vez',
+    sizeAuto: 'Auto (segue a tela)',
+    tipIdle: 'tranquila', tipWork: 'trabalhando', tipAlert: 'esperando você', tipDone: 'feito', tipAsleep: 'dormindo',
+    online: (port) => `Capri — ouvindo na porta ${port}`,
+    teleport: 'Teletransportar', satellite: 'Olhar o satélite', demo: 'Ver a demo', help: 'Como funciona?',
+    show: 'Trazer de volta', hide: 'Guardar',
+    size: 'Tamanho', small: 'Pequena', medium: 'Média', large: 'Grande', sound: 'Som', mute: 'Sem som',
+    soundsDir: 'Abrir a pasta de sons personalizados', screen: 'Tela', wander: 'Passear quando nada acontece',
+    possess: 'Possuir minhas janelas', lang: 'Idioma', auto: 'Automático (sistema)', startup: 'Iniciar com o Windows',
+    hooksOn: 'Hooks do Claude Code: instalados', hooksOff: 'Instalar os hooks do Claude Code',
+    hooksRemove: 'Remover os hooks do Claude Code', quit: 'Sair',
+  },
+zh: {
+    name: '中文',
+    soundTour: '音效试听',
+    showAll: '全部演一遍',
+    heldOnce: '被抱起',
+    replayIntro: '重播开场动画',
+    screenPossess: '全屏附身',
+    possessOnce: '附身看看',
+    sizeAuto: '自动（跟屏幕）',
+    who: '摩羯',
+    tipIdle: '闲', tipWork: '干活中', tipAlert: '等你', tipDone: '搞定了', tipAsleep: '打盹',
+    online: (port) => `摩羯 — 监听 ${port}`,
+    teleport: '瞬移', satellite: '看卫星', demo: '放演示', help: '怎么玩？',
+    show: '叫她回来', hide: '收起来',
+    size: '大小', small: '小', medium: '中', large: '大', sound: '声音', mute: '静音',
+    soundsDir: '打开音效文件夹', screen: '屏幕', wander: '闲着乱晃',
+    possess: '占我的窗', lang: '语言', auto: '自动（跟系统）', startup: '开机启动',
+    hooksOn: 'DSH 桥：已装', hooksOff: '装 DSH 桥',
+    hooksRemove: '卸 DSH 桥', quit: '退出',
+  },
+};
+
+module.exports = { TRAY, LANGS: Object.keys(TRAY) };

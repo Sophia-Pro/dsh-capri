@@ -1,0 +1,28 @@
+{
+  "name": "dsh-plugin-capri-bridge",
+  "version": "0.1.0",
+  "description": "把 DSH 会话事件喂给桌面宠物 Capri：动作播报、等批准找人、完成庆祝、余额/阶段提醒。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "capri",
+    "desktop-pet"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "test": "node test/01-events.test.mjs && node test/02-tool-names.test.mjs && node test/03-stop-text.test.mjs"
+  }
+}
