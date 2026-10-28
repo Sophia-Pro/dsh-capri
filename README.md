@@ -1,8 +1,8 @@
 <div align="center">
 
-# 摩羯 <sub>// RELIC</sub>
+# 摩羯 <sub>· dsh-capri</sub>
 
-**NIGHT CITY · 桌面挂件 · 中文 · 接 DeepSeek Harness**
+**DeepSeek Harness 的桌面挂件 + 桥插件 · macOS · 全中文**
 
 <img src="docs/media/badge-macos.svg" alt="macOS arm64">
 <img src="docs/media/badge-dsh.svg" alt="DSH">
@@ -11,9 +11,9 @@
 
 <br><br>
 
-<a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/MoJie-0.1.0-macOS-arm64.zip"><b>⬇ 挂件（macOS arm64，98MB）</b></a>
+<a href="https://github.com/Sophia-Pro/dsh-capri/releases/download/v0.1.0/MoJie-0.1.0-macOS-arm64.zip"><b>⬇ 挂件（macOS arm64，98MB）</b></a>
 &nbsp;·&nbsp;
-<a href="https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/download/v0.1.0/MoJie-DSH-Plugin-0.1.0.zip"><b>⬇ DSH 插件（9KB）</b></a>
+<a href="https://github.com/Sophia-Pro/dsh-capri/releases/download/v0.1.0/MoJie-DSH-Plugin-0.1.0.zip"><b>⬇ DSH 插件（9KB）</b></a>
 
 <br>
 
@@ -68,7 +68,7 @@
 
 `dsh-plugin/` 是桥插件：装进 DeepSeek Harness 后，DSH 里新的一轮、某个工具、等你批准、干完、烧了多少 token，都会变成她的话和动作（面板里那个「琢磨：…」就是她看见你在想什么）。
 
-从 [Release](https://github.com/Sophia-Pro/dsh-mojie-desktop/releases/tag/v0.1.0) 下 `MoJie-DSH-Plugin-0.1.0.zip` 解压，或者直接用仓库里的 `dsh-plugin/`：
+从 [Release](https://github.com/Sophia-Pro/dsh-capri/releases/tag/v0.1.0) 下 `MoJie-DSH-Plugin-0.1.0.zip` 解压，或者直接用仓库里的 `dsh-plugin/`：
 
 ```bash
 cd dsh-plugin && npm install
@@ -80,8 +80,8 @@ dsh plugin --profile desktop add link:"$PWD"
 ## 快速开始（从源码跑）
 
 ```bash
-git clone https://github.com/Sophia-Pro/dsh-mojie-desktop.git
-cd dsh-mojie-desktop
+git clone https://github.com/Sophia-Pro/dsh-capri.git
+cd dsh-capri
 npm install
 npm start                    # 先看能不能出人
 
