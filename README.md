@@ -1,7 +1,7 @@
 # 摩羯 · DSH 桌面挂件
 
 <p align="center">
-  <img src="docs/media/hero.jpg" alt="开场：她抓住你的屏幕边缘说嗨" width="820">
+  <img src="docs/media/hero-2.jpg" alt="开场：她抓住你的屏幕边缘说嗨" width="820">
 </p>
 
 <p align="center">
@@ -35,11 +35,11 @@
 
 **开场** —— 三种随机：抓屏幕的大近景 / 大头照「嗨」/ 小动作入场。
 
-<p align="center"><img src="docs/media/intro.gif" alt="开场动画" width="720"></p>
+<p align="center"><img src="docs/media/intro-2.gif" alt="开场动画" width="720"></p>
 
 **全屏附身** —— 整块屏幕变成她的脸，两秒后松开。
 
-<p align="center"><img src="docs/media/screen-possess.gif" alt="全屏附身" width="720"></p>
+<p align="center"><img src="docs/media/screen-possess-2.gif" alt="全屏附身" width="720"></p>
 
 **附身窗口** —— 坐久了钻进去，整扇窗长满她的眼睛和锯齿嘴：
 
