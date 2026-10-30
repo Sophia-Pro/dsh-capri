@@ -200,7 +200,15 @@ function rendererConfig() {
 }
 
 function updateConfig(patch) {
+  const before = config.load();
   config.save(patch);
+  const after = config.load();
+  // 开机自启：改了就立刻跟系统同步
+  if ('autostart' in patch || before.autostart !== after.autostart) {
+    try {
+      app.setLoginItemSettings({ openAtLogin: Boolean(after.autostart), openAsHidden: true });
+    } catch (err) { console.error('[capri] 设置开机自启失败', err.message); }
+  }
   const cfg = rendererConfig();
   overlay?.webContents.send('capri:config', cfg);
   rebuildTray();
@@ -437,6 +445,9 @@ function registerIpc() {
   });
   ipcMain.handle('config:get', () => rendererConfig());
   ipcMain.on('app:quit', () => { app.quit(); });
+  ipcMain.on('app:openConfig', () => {
+    try { shell.showItemInFolder(path.join(app.getPath('userData'), 'config.json')); } catch { /* 忽略 */ }
+  });
   ipcMain.handle('balance:get', async (_e, fresh) => {
     try {
       const ac = new AbortController();

@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('host', {
   demoWindow: (open) => ipcRenderer.invoke('demo:window', Boolean(open)),
   openMenu: () => ipcRenderer.send('menu:open'),
   balance: (fresh) => ipcRenderer.invoke('balance:get', Boolean(fresh)),
+  openConfigFile: () => ipcRenderer.send('app:openConfig'),
   quit: () => ipcRenderer.send('app:quit'),
   onIdle: on('capri:idle'),
   installHooks: () => ipcRenderer.invoke('hooks:install'),
