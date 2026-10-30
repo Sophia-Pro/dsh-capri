@@ -14,7 +14,12 @@ const el = (tag, props = {}, ...kids) => {
 }
 
 const money = (n, cur) => (cur === 'CNY' || !cur ? '¥' + Number(n).toFixed(2) : Number(n).toFixed(2) + ' ' + cur)
-const kfmt = (n) => (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(Math.round(n || 0)))
+const kfmt = (n) => {
+  const v = Number(n) || 0
+  if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M'
+  if (v >= 1000) return (v / 1000).toFixed(1) + 'k'
+  return String(Math.round(v))
+}
 
 function hms(ms) {
   const t = Math.max(0, Math.floor(ms / 1000))

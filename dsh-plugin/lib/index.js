@@ -102,6 +102,35 @@ function addSpend(cost, tokens) {
   return led
 }
 
+// 历史消耗：DSH 里装了鲸鱼挂件的话，它有一份按天的用量账本（连页面端、重启前的都算），
+// 直接拿来当"今日已用"的来源；没有再用我们自己的账本。
+const WHALE_LEDGERS = [
+  path.join(DSH_HOME, '.dshw-usage.json'),
+  path.join(DSH_HOME, 'profiles', 'web', '.dshw-usage.json'),
+]
+
+function readHistoryToday() {
+  const day = todayKey()
+  for (const file of WHALE_LEDGERS) {
+    try {
+      const data = JSON.parse(fs.readFileSync(file, 'utf8'))
+      const events = Array.isArray(data && data.events) ? data.events : []
+      if (!events.length) continue
+      let cost = 0
+      let tokens = 0
+      let turns = 0
+      for (const e of events) {
+        if (!e || e.day !== day) continue
+        cost += Number(e.cost) || 0
+        tokens += Number(e.tokens) || 0
+        turns += 1
+      }
+      return { cost, tokens, turns, source: file }
+    } catch { /* 没有这份账本 */ }
+  }
+  return null
+}
+
 function observeBalance(amount, currency) {
   const day = todayKey()
   const s = readState()
@@ -262,7 +291,9 @@ export function apply(ctx, rawConfig = {}) {
     const next = nextPeakChangeAt(nowSec)
     const bal = balance || null
     const led = readLedger()
-    const today = Number(led.cost) || 0
+    const hist = readHistoryToday()
+    // 有历史账本就以它为准（含本次开机之前的消耗），否则用自己记的
+    const today = hist ? hist.cost : Number(led.cost) || 0
     return {
       ok: true,
       version: pkgVersion,
@@ -270,8 +301,9 @@ export function apply(ctx, rawConfig = {}) {
       balance: bal ? bal.amount : null,
       currency: bal ? bal.currency : 'CNY',
       today,
-      tokensToday: Number(led.tokens) || 0,
-      turnsToday: Number(led.turns) || 0,
+      tokensToday: hist ? hist.tokens : Number(led.tokens) || 0,
+      turnsToday: hist ? hist.turns : Number(led.turns) || 0,
+      todaySource: hist ? 'history' : 'ledger',
       peak,
       period: peak ? 'peak' : 'valley',
       peakHours: '9:00–12:00 / 14:00–18:00',
