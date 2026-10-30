@@ -460,14 +460,8 @@ async function boot() {
     return sayBase({ ...msg, actions });
   };
 
-  // 开始演出时把普通气泡收掉，免得挡着她的动作
-  setInterval(() => {
-    if (!panel.visible) return;
-    if (capri.busy || capri.act) {
-      const kind = panel.current && panel.current.kind;
-      if (!panel._force && (kind === 'info' || kind === 'work' || kind === 'idle')) panel.hide();
-    }
-  }, 400);
+  // 气泡只做「演出中不新弹」的抑制，不自动收掉已有的（不然点她说话会一闪就没）
+
   const answer = panel.onAction;
   panel.onAction = (id) => {
     if (id === 'balance' || id === 'balanceRefresh') { showBalance(); return; }
@@ -475,7 +469,22 @@ async function boot() {
   };
 
   // 点到别的软件、窗口失焦 → 菜单和设置一起收
-  host.onBlur?.(() => settings?.closeAll?.());
+  // 菜单/设置：刚打开 500ms 内不吃 blur；确认真的没焦点才收
+  let openedAt = 0
+  if (settings) {
+    const prev = settings.onOpenChange
+    settings.onOpenChange = (open) => {
+      if (open) openedAt = Date.now()
+      prev?.(open)
+    }
+  }
+  host.onBlur?.(() => {
+    setTimeout(() => {
+      if (Date.now() - openedAt < 500) return
+      if (document.hasFocus()) return
+      settings?.closeAll?.()
+    }, 200)
+  })
 
   // 电脑空闲 → 播放收起来的动画；回来 → 出来
   host.onIdle(({ on }) => {

@@ -479,8 +479,12 @@ function registerIpc() {
   ipcMain.on('overlay:focusable', (_e, on) => {
     try {
       overlay.setFocusable(Boolean(on));
-      if (on) overlay.focus();
-      else overlay.blur();
+      if (on) {
+        if (process.platform === 'darwin') app.focus({ steal: true });
+        overlay.focus();
+      } else {
+        overlay.blur();
+      }
     } catch { /* 忽略 */ }
   });
   // her welcome panel's buttons
@@ -613,7 +617,12 @@ function main() {
     registerIpc();
     syncFollowFlag(config.load());
     createOverlay();
-    overlay.on('blur', () => { try { overlay.webContents.send('capri:blur'); } catch { /* 忽略 */ } });
+    // 刚打开菜单那一两帧的 blur 是噪音（窗口还没抢到焦点），延迟确认再通知
+    overlay.on('blur', () => {
+      setTimeout(() => {
+        try { if (!overlay.isDestroyed() && !overlay.isFocused()) overlay.webContents.send('capri:blur'); } catch { /* 忽略 */ }
+      }, 250);
+    });
     createTray();
     startIdleWatch();
     windowWatch = startWindowWatch({
