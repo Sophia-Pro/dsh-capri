@@ -470,11 +470,38 @@ async function boot() {
     answer?.(id);
   };
 
+  // 气泡收起后，把刚才押后的动作补上（说话期间不抢 talk 动画）
+  const hideBase = panel.hide.bind(panel);
+  panel.hide = () => { hideBase(); brain.flushAct?.(); };
+
   // 点到别的软件、窗口失焦 → 菜单和设置一起收
   // 菜单/设置：开着的时候整层接鼠标，点哪里都由这一层收（不靠窗口焦点，省得闪）
+  // 按时间段换性格：深夜安静、上午精神、白天正常、傍晚略活跃
+  function timePhase() {
+    const h = new Date().getHours();
+    if (h >= 23 || h < 5) return { name: 'night', act: 0.45, possess: false, night: true };
+    if (h < 9) return { name: 'dawn', act: 1.25, possess: true, night: false };
+    if (h < 18) return { name: 'day', act: 1, possess: true, night: false };
+    if (h < 23) return { name: 'evening', act: 1.1, possess: true, night: false };
+    return { name: 'day', act: 1, possess: true, night: false };
+  }
+  function applyPhase() {
+    const ph = timePhase();
+    const base = Number(cfgNow.activity) || 1;
+    capri.activity = base * ph.act;
+    capri.nightPhase = ph.night;
+    brain.night = ph.night;
+    if (!ph.possess) capri.possessWindows = false;
+    else if (!cfgNow.quiet) capri.possessWindows = cfgNow.possess !== false;
+  }
+  applyPhase();
+  setInterval(applyPhase, 5 * 60 * 1000);
+
   // 电脑空闲 → 播放收起来的动画；回来 → 出来
+  const someoneWatching = () => (capri.windows?.wins || []).some((w) => w.w > innerWidth * 0.9 && w.h > innerHeight * 0.82);
   host.onIdle(({ on }) => {
     if (!cfgNow.idleStowMin) return;
+    if (on && someoneWatching()) return; // 全屏放视频/演示：不收
     if (on && !capri.stowed) capri.stow();
     else if (!on && capri.stowed) capri.unstow();
   });

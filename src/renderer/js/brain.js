@@ -51,6 +51,7 @@ export class Brain {
   constructor({ capri, panel, voice, host, lang = 'zh' }) {
     this.capri = capri;
     this.panel = panel;
+    this.night = false; // 深夜模式（由 app.js 按时间设置）
     this.voice = voice;
     this.host = host;
     this.lang = lang;
@@ -99,7 +100,19 @@ export class Brain {
     if (!pool) return
     const chance = kind === 'done' ? 0.55 : kind === 'error' ? 0.45 : 0.22
     if (Math.random() > chance) return
-    try { capri.perform?.(pick(pool)) } catch { /* 演不出来就算了 */ }
+    const act = pick(pool)
+    // 她正在说话时别切走 talk 动画：等气泡收起再演
+    if (this.panel && this.panel.visible) { this._pendingAct = act; return }
+    try { capri.perform?.(act) } catch { /* 演不出来就算了 */ }
+  }
+
+  // 气泡收掉之后把刚才延后的动作补上
+  flushAct() {
+    const act = this._pendingAct
+    this._pendingAct = null
+    if (!act) return
+    if (!this.capri || this.capri.busy || this.capri.stowed) return
+    try { this.capri.perform?.(act) } catch { /* 忽略 */ }
   }
 
   say(kind, line, s, extra = {}) {
@@ -353,7 +366,10 @@ export class Brain {
     if (hit.kind === 'chatter') {
       return this.say('info', pick(this.t.chatter || this.t.idle), null, { face: pick(['smug', 'look', 'aside', 'laugh']), hold: 3200 });
     }
-    if (hit.kind === 'idle') return this.say('info', pick(this.t.idle), null, { face: pick(['calm', 'smug', 'aside']), hold: 2800 });
+    if (hit.kind === 'idle') {
+      const pool2 = this.night && this.t.night && Math.random() < 0.6 ? this.t.night : this.t.idle
+      return this.say('info', pick(pool2), null, { face: pick(['calm', 'smug', 'aside']), hold: 2800 })
+    }
     return this.say('info', hit.text, null, { face: 'look', hold: 3600 });
   }
 
