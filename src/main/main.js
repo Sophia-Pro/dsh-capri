@@ -234,45 +234,72 @@ function startFollowExitWatch() {
 }
 
 // ---------- 环境感知：插了什么、电源变了没、机器吃不吃力 ----------
+// 原则：能用系统事件的就别轮询，能进程内算的就别起子进程。
+//   · 卷挂载/卸载 → fs.watch('/Volumes')（事件驱动，毫秒级；失败才退回 5 秒兜底轮询）
+//   · 电源 → Electron powerMonitor 的 on-ac / on-battery（系统事件）
+//   · 负载 → os.loadavg()（进程内，纯读值，2 秒一次不吃 CPU）
+// 以前每 20 秒 fork 一次 `pmset -g batt` 又慢又费，撤了。
 let lastVolumes = null;
-let lastPower = '';
 let lastCpuHighAt = 0;
+let cpuHighTicks = 0;
+let volumesWatcher = null;
 
 function readVolumes() {
   try { return fs.readdirSync('/Volumes').filter((n) => !n.startsWith('.')) } catch { return [] }
 }
-function readPower() {
-  try {
-    const out = execFileSync('/usr/bin/pmset', ['-g', 'batt'], { timeout: 1500 }).toString()
-    if (/AC Power/i.test(out)) return 'ac'
-    if (/Battery Power/i.test(out)) return 'battery'
-    return ''
-  } catch { return '' }
+
+function volumesChanged() {
+  const vols = readVolumes()
+  if (lastVolumes) {
+    const added = vols.filter((v) => !lastVolumes.includes(v))
+    const removed = lastVolumes.filter((v) => !vols.includes(v))
+    if (added.length) overlay?.webContents.send('capri:ambient', { type: 'device-in', names: added })
+    if (removed.length) overlay?.webContents.send('capri:ambient', { type: 'device-out', names: removed })
+  }
+  lastVolumes = vols
 }
+
 function startAmbientWatch() {
+  lastVolumes = readVolumes()
+
+  // 卷：系统目录事件，抖 150ms 合并
+  try {
+    let t = null
+    volumesWatcher = fs.watch('/Volumes', () => {
+      clearTimeout(t)
+      t = setTimeout(() => { try { volumesChanged() } catch { /* 忽略 */ } }, 150)
+    })
+    volumesWatcher.on('error', () => { try { volumesWatcher.close() } catch { /* 忽略 */ } ; volumesWatcher = null })
+  } catch { volumesWatcher = null }
+  if (!volumesWatcher) {
+    // 兜底：fs.watch 不工作时 5 秒看一次（只是 readdir，很便宜）
+    setInterval(() => { try { volumesChanged() } catch { /* 忽略 */ } }, 5000)
+  }
+
+  // 电源：系统事件，不用轮询
+  try {
+    powerMonitor.on('on-ac', () => overlay?.webContents.send('capri:ambient', { type: 'power', state: 'ac' }))
+    powerMonitor.on('on-battery', () => overlay?.webContents.send('capri:ambient', { type: 'power', state: 'battery' }))
+  } catch { /* 平台不支持就算了 */ }
+
+  // 负载：进程内读值，2 秒一次；连续 3 次高才报一次（6 秒确认，避免抖动）
   setInterval(() => {
     try {
       const cfg = config.load()
       if (cfg.ambient === false) return
-      const vols = readVolumes()
-      if (lastVolumes) {
-        const added = vols.filter((v) => !lastVolumes.includes(v))
-        const removed = lastVolumes.filter((v) => !vols.includes(v))
-        if (added.length) overlay?.webContents.send('capri:ambient', { type: 'device-in', names: added })
-        if (removed.length) overlay?.webContents.send('capri:ambient', { type: 'device-out', names: removed })
-      }
-      lastVolumes = vols
-      const pw = readPower()
-      if (lastPower && pw && pw !== lastPower) overlay?.webContents.send('capri:ambient', { type: 'power', state: pw })
-      lastPower = pw || lastPower
       const load = os.loadavg()[0]
       const cores = Math.max(1, (os.cpus() || []).length)
-      if (load / cores > 0.85 && Date.now() - lastCpuHighAt > 10 * 60 * 1000) {
-        lastCpuHighAt = Date.now()
-        overlay?.webContents.send('capri:ambient', { type: 'cpu', load: Math.round(load * 10) / 10, cores })
+      if (load / cores > 0.85) {
+        cpuHighTicks += 1
+        if (cpuHighTicks === 3 && Date.now() - lastCpuHighAt > 10 * 60 * 1000) {
+          lastCpuHighAt = Date.now()
+          overlay?.webContents.send('capri:ambient', { type: 'cpu', load: Math.round(load * 10) / 10, cores })
+        }
+      } else {
+        cpuHighTicks = 0
       }
     } catch { /* 忽略 */ }
-  }, 20000)
+  }, 2000)
 }
 
 function syncFollowFlag(cfg) {
@@ -508,14 +535,14 @@ function startIdleWatch() {
         if (idleOn) { idleOn = false; overlay?.webContents.send('capri:idle', { on: false, idle: 0 }); }
         return;
       }
-      const idle = powerMonitor.getSystemIdleTime();
+      const idle = powerMonitor.getSystemIdleTime(); // 纯读值，1 秒一次几乎不耗
       const on = idle >= min * 60;
       if (on !== idleOn) {
         idleOn = on;
         overlay?.webContents.send('capri:idle', { on, idle });
       }
     } catch { /* 忽略 */ }
-  }, 15000);
+  }, 1000);
   try { idleTimer.unref?.() } catch { /* 忽略 */ }
 }
 
