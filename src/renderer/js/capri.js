@@ -525,22 +525,22 @@ export class Capri {
         return;
       }
       const r = Math.random();
-      if (r < 0.3) this.flourish();
-      else if (r < 0.55 && this.canPossess()) this.possess();
-      else if (r < 0.75) this.fall(); // just hops off the ledge
+      if (r < 0.26) this.flourish();
+      else if (r < 0.44 && this.canPossess()) this.possess();
+      else if (r < 0.62) this.fall(); // just hops off the ledge
+      else if (r < 0.76) this.peek(this.pickPeekSide()); // 缩到边上靠着
       else this.teleport(this.spot('random'));
       return;
     }
     const seat = this.pickSeat();
     const r = Math.random();
-    // 哪儿都放不下她（全是顶天的大窗口）：改去屏幕边缘探头，别杵在地上
-    if (!seat && r < 0.5) {
-      this.peek();
+    // 常规池子：靠边（上/左/右）最常有 -> 坐窗 -> 瞬移 -> 小动作
+    if (r < 0.32) {
+      this.peek(this.pickPeekSide());
       return;
     }
-    if (seat && r < 0.35) this.sitOn(seat);
-    else if (r < 0.6) this.peek();
-    else if (r < 0.85) this.teleport(this.spot('random'));
+    if (seat && r < 0.52) this.sitOn(seat);
+    else if (r < 0.78) this.teleport(this.spot('random'));
     else this.flourish();
   }
 
@@ -1376,7 +1376,15 @@ export class Capri {
   }
 
   // Lean in from an edge of the screen: vanish, then slide in on twos, three drawings.
-  async peek(side = pick(['left', 'right', 'top'])) {
+  // 靠哪条边：左右常见，顶上（倒挂）偶尔
+  pickPeekSide() {
+    const r = Math.random()
+    if (r < 0.42) return 'left'
+    if (r < 0.84) return 'right'
+    return 'top'
+  }
+
+  async peek(side = this.pickPeekSide()) {
     if (this.busy) return;
     const s = this.scale;
     const { w, h } = this.view;
@@ -1449,7 +1457,7 @@ export class Capri {
     const side = this.peekSide;
     this.setStance('stand');
     if (shy && Math.random() < 0.6) {
-      this.peek(pick(['left', 'right', 'top'].filter((x) => x !== side)));
+      this.peek(this.pickPeekSide());
       return;
     }
     this.busy = true;
