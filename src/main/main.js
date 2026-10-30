@@ -475,6 +475,14 @@ function registerIpc() {
   ipcMain.handle('demo:window', (_e, open) => demoWindow(open));
   // right-clicking her: the same menu as the tray icon (which Windows often hides behind the ^ by the clock)
   ipcMain.on('menu:open', () => overlay?.webContents.send('capri:menu'));
+  // 菜单/设置打开时临时允许聚焦：点击别的软件 → 窗口失焦 → 页面收到 capri:blur 自己关
+  ipcMain.on('overlay:focusable', (_e, on) => {
+    try {
+      overlay.setFocusable(Boolean(on));
+      if (on) overlay.focus();
+      else overlay.blur();
+    } catch { /* 忽略 */ }
+  });
   // her welcome panel's buttons
   ipcMain.handle('hooks:install', () => runHooks('install', { quiet: true }));
   // DSH 版：她的「文件夹」是 DSH 的配置目录（profiles / cordis.patch.yml 都在里面）
@@ -605,6 +613,7 @@ function main() {
     registerIpc();
     syncFollowFlag(config.load());
     createOverlay();
+    overlay.on('blur', () => { try { overlay.webContents.send('capri:blur'); } catch { /* 忽略 */ } });
     createTray();
     startIdleWatch();
     windowWatch = startWindowWatch({

@@ -388,25 +388,26 @@ async function boot() {
   // the first Claude Code event that ever reaches her: so you know it worked
   // ---------- 右键菜单 / 设置面板 ----------
   const showBalance = async () => {
-    panel.say({ kind: 'info', tag: '余额', line: '查一下…', hold: 6000, actions: [{ id: 'balance', label: '刷新', primary: true }] });
+    panel.hide();
     const d = await host.balance(true);
     if (!d || !d.ok) {
-      panel.say({ kind: 'error', tag: '余额', line: '拿不到余额：' + ((d && d.error) || '桥没开'), hold: 9000 });
+      panel.say({ kind: 'error', tag: '余额', line: '余额暂时取不到', summary: (d && d.error) || '桥没开：先在 DSH 里启用 dsh-capri 插件', hold: 9000, force: true });
       return;
     }
     const money = (n) => (d.currency === 'CNY' ? '¥' + Number(n).toFixed(2) : Number(n).toFixed(2) + ' ' + d.currency);
-    const parts = [];
-    parts.push(d.balance != null ? '余额 ' + money(d.balance) : '余额 未知');
-    if (d.today != null) parts.push('今天已用 ' + money(d.today));
-    parts.push(d.peak ? '现在高峰（原价）' : '现在谷时（半价）');
-    let tail = '峰谷：' + (d.peakHours || '') + (d.peak ? '（现在高峰）' : '（现在谷时，半价）');
-    if (d.nextChangeAt) {
-      const next = new Date(d.nextChangeAt);
-      const hh = String(next.getHours()).padStart(2, '0');
-      const mm = String(next.getMinutes()).padStart(2, '0');
-      tail += ' · ' + hh + ':' + mm + ' 切换';
-    }
-    panel.say({ kind: 'info', tag: '余额', line: parts.join(' · '), summary: tail, hold: 15000, actions: [{ id: 'balance', label: '刷新', primary: true }] });
+    const when = d.nextChangeAt ? new Date(d.nextChangeAt) : null;
+    const hhmm = when ? String(when.getHours()).padStart(2, '0') + ':' + String(when.getMinutes()).padStart(2, '0') : '';
+    const price = d.peak ? '高峰 · 原价' : '谷时 · 半价';
+    panel.say({
+      kind: 'info',
+      tag: '余额',
+      line: '余额 ' + (d.balance != null ? money(d.balance) : '—'),
+      quote: '今天已用 ' + (d.today != null ? money(d.today) : '—') + '　·　' + price,
+      summary: '峰谷 9–12 / 14–18' + (hhmm ? '　·　' + hhmm + ' 切换' : ''),
+      hold: 20000,
+      force: true,
+      actions: [{ id: 'balanceRefresh', label: '刷新', primary: true }],
+    });
   };
 
   settings = new Settings({
@@ -450,15 +451,31 @@ async function boot() {
   // 气泡里常驻「查看余额」；面板原来的按钮（引导）不动
   const sayBase = panel.say.bind(panel);
   panel.say = (msg = {}) => {
+    // 她在演动作/附身的时候别盖气泡（余额、错误这类明确要说的除外）
+    if (!msg.force && (capri.busy || capri.act || capri.possessed)) return null;
+    panel._force = Boolean(msg.force);
     const actions = (msg.actions || []).filter((a) => a.id !== 'balance');
-    if (cfgNow.balance !== false) actions.push({ id: 'balance', label: '查看余额' });
+    const isBalance = msg.tag === '余额';
+    if (!isBalance && cfgNow.balance !== false) actions.push({ id: 'balance', label: '查看余额' });
     return sayBase({ ...msg, actions });
   };
+
+  // 开始演出时把普通气泡收掉，免得挡着她的动作
+  setInterval(() => {
+    if (!panel.visible) return;
+    if (capri.busy || capri.act) {
+      const kind = panel.current && panel.current.kind;
+      if (!panel._force && (kind === 'info' || kind === 'work' || kind === 'idle')) panel.hide();
+    }
+  }, 400);
   const answer = panel.onAction;
   panel.onAction = (id) => {
-    if (id === 'balance') { showBalance(); return; }
+    if (id === 'balance' || id === 'balanceRefresh') { showBalance(); return; }
     answer?.(id);
   };
+
+  // 点到别的软件、窗口失焦 → 菜单和设置一起收
+  host.onBlur?.(() => settings?.closeAll?.());
 
   // 电脑空闲 → 播放收起来的动画；回来 → 出来
   host.onIdle(({ on }) => {
