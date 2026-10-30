@@ -78,3 +78,9 @@
 .panel[data-kind="error"] .panel__tag{background:#ff5a5a;color:#2a0404;border-color:#ff5a5a}
 .panel[data-kind="alert"]{border-color:#ffcf5c;box-shadow:6px 6px 0 rgba(255,207,92,.35)}
 .panel[data-kind="done"]{border-color:#3dd68c;box-shadow:6px 6px 0 rgba(61,214,140,.3)}
+
+/* 余额卡里的七天小柱状 */
+.capri-card__week{display:flex;align-items:flex-end;gap:3px;height:28px;margin-top:8px;
+  padding-top:2px;border-top:1px dashed rgba(255,255,255,.12)}
+.capri-card__bar{flex:1;background:var(--card-soft);border-top:2px solid rgba(255,255,255,.18);min-height:2px}
+.capri-card__bar.is-today{background:var(--card-accent);border-top-color:var(--card-accent)}

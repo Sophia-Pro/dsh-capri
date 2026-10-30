@@ -1345,12 +1345,16 @@ export class Capri {
       return front;
     };
     const taken = this.fx.possess(rect, { covers, entry, look: () => this.mouse });
-    this.voice.play('bolt');
-    await sleep(300);
-    this.voice.play('possess');
-    await sleep(1600);
-    taken.leave();
-    await sleep(260);
+    try {
+      this.voice.play('bolt');
+      await sleep(300);
+      this.voice.play('possess');
+      await sleep(1600);
+    } finally {
+      // 窗口在这期间被关掉/挪走也不能把眼睛留在屏幕上
+      try { taken.leave() } catch { /* 忽略 */ }
+      await sleep(260);
+    }
 
     const here = rect();
     let seat = this.pickSeat({ except: id });

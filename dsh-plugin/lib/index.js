@@ -98,8 +98,28 @@ function addSpend(cost, tokens) {
   led.cost = Number((led.cost + (Number(cost) || 0)).toFixed(6))
   led.tokens = (Number(led.tokens) || 0) + (Number(tokens) || 0)
   led.turns = (Number(led.turns) || 0) + 1
-  writeState({ ledger: led })
+  // 按天留档（近 14 天），给余额卡上的七天小柱子用
+  const st = readState()
+  const days = st.days && typeof st.days === 'object' ? st.days : {}
+  days[led.day] = led.cost
+  const keep = Object.keys(days).sort().slice(-14)
+  const pruned = {}
+  for (const k of keep) pruned[k] = days[k]
+  writeState({ ledger: led, days: pruned })
   return led
+}
+
+function last7Days(todayCost) {
+  const st = readState()
+  const days = st.days && typeof st.days === 'object' ? st.days : {}
+  const out = []
+  const now = Date.now()
+  for (let i = 6; i >= 0; i -= 1) {
+    const key = bjOf(Math.floor((now - i * 86400000) / 1000)).toISOString().slice(0, 10)
+    const cost = key === todayKey() ? Number(todayCost) || 0 : Number(days[key]) || 0
+    out.push({ day: key, cost: Number(cost.toFixed(4)) })
+  }
+  return out
 }
 
 // 今天的起点余额：当天第一次看到余额时记下来，之后的余额差就是"今天花掉的"
@@ -330,6 +350,7 @@ export function apply(ctx, rawConfig = {}) {
       tokensToday: Number(led.tokens) || 0,
       turnsToday: Number(led.turns) || 0,
       todaySource: byBalance > own ? 'balance' : 'ledger',
+      last7: last7Days(today),
       peak,
       period: peak ? 'peak' : 'valley',
       peakHours: '9:00–12:00 / 14:00–18:00',

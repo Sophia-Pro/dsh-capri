@@ -130,6 +130,19 @@ export class Card {
       el('span', { class: 'capri-card__p', text: peak ? '高峰 · 原价' : '低谷 · 半价' }),
       el('span', { class: 'capri-card__cd' }))
     root.appendChild(period)
+    // 七天小柱状：今天的数字就是上面那个"今日已用"
+    if (Array.isArray(data && data.last7) && data.last7.some((d) => Number(d.cost) > 0)) {
+      const max = Math.max(...data.last7.map((d) => Number(d.cost) || 0), 0.01)
+      const week = el('div', { class: 'capri-card__week' })
+      data.last7.forEach((d, i) => {
+        const h = Math.max(2, Math.round((Number(d.cost) || 0) / max * 26))
+        const bar = el('div', { class: 'capri-card__bar', title: d.day + '  ¥' + (Number(d.cost) || 0).toFixed(2) })
+        bar.style.height = h + 'px'
+        if (i === data.last7.length - 1) bar.classList.add('is-today')
+        week.appendChild(bar)
+      })
+      root.appendChild(week)
+    }
     root.appendChild(el('div', { class: 'capri-card__hint', text: '谷时：工作日 12:00–14:00、18:00–次日 09:00，周末与法定节假日全天' }))
 
     root.appendChild(el('div', { class: 'capri-card__foot' },

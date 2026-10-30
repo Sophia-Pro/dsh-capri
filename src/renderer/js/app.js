@@ -441,10 +441,30 @@ async function boot() {
       balance: () => showBalance(),
       stow: () => capri.stow(),
       unstow: () => capri.unstow(),
+      comeHere: async () => {
+        const p = await host.cursor?.();
+        const w = innerWidth;
+        const at = p && Number.isFinite(p.x) ? capri.clampX(p.x) : (capri.side === 'left' ? Math.round(w * 0.18) : Math.round(w * 0.82));
+        capri.teleport({ x: at, y: capri.floor });
+        capri.faceToward?.(w / 2);
+      },
+      goLeft: () => {
+        const w = innerWidth;
+        const band = Number(capri.sideBand) || 0.25;
+        capri.teleport({ x: Math.max(70, Math.round(w * band * 0.55)), y: capri.floor });
+        capri.faceToward?.(w / 2);
+      },
+      goRight: () => {
+        const w = innerWidth;
+        const band = Number(capri.sideBand) || 0.25;
+        capri.teleport({ x: Math.min(w - 70, Math.round(w * (1 - band * 0.55))), y: capri.floor });
+        capri.faceToward?.(w / 2);
+      },
     },
   });
   settings.onOpenChange = (open) => { setInteractive(Boolean(open)); if (!open) refreshHit(); };
   window.__settings = settings;
+  window.__balanceCard = balanceCard;
   window.__showBalance = showBalance;
   settings.cfg = cfgNow = config;
   settings.apply();
@@ -503,6 +523,13 @@ async function boot() {
   schedulePeek();
 
   // 菜单/设置：开着的时候整层接鼠标，点哪里都由这一层收（不靠窗口焦点，省得闪）
+  // 演出完了如果系统还是空闲的，补上那次收起
+  setInterval(() => {
+    if (!idleWanted || capri.busy || capri.stowed || settings?.isOpen() || balanceCard?.visible) return;
+    idleWanted = false;
+    capri.stow();
+  }, 4000);
+
   // 按时间段换性格：深夜安静、上午精神、白天正常、傍晚略活跃
   function timePhase() {
     const h = new Date().getHours();
@@ -515,7 +542,8 @@ async function boot() {
   function applyPhase() {
     const ph = timePhase();
     const base = Number(cfgNow.activity) || 1;
-    capri.activity = base * ph.act;
+    // 时间段乘子叠上去可能变得离谱（0.14 倍她几乎不动、2.5 倍又太吵），夹在 0.4–2.2
+    capri.activity = Math.min(2.2, Math.max(0.4, base * ph.act));
     capri.nightPhase = ph.night;
     brain.night = ph.night;
     if (!ph.possess) capri.possessWindows = false;
@@ -526,9 +554,12 @@ async function boot() {
 
   // 电脑空闲 → 播放收起来的动画；回来 → 出来
   const someoneWatching = () => (capri.windows?.wins || []).some((w) => w.w > innerWidth * 0.9 && w.h > innerHeight * 0.82);
+  let idleWanted = false;   // 系统空闲了，但她在演出，等下再收
   host.onIdle(({ on }) => {
     if (!cfgNow.idleStowMin) return;
     if (on && someoneWatching()) return; // 全屏放视频/演示：不收
+    if (on && capri.busy) { idleWanted = true; return; } // 正在演，别掐断
+    idleWanted = false;
     if (on && !capri.stowed) capri.stow();
     else if (!on && capri.stowed) capri.unstow();
   });
