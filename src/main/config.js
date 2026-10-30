@@ -29,6 +29,7 @@ const DEFAULTS = {
   sideBand: 0.25,     // 允许活动的边带宽度（0.25 = 左右各 25%，中间 50% 禁区）
   balance: true,      // 气泡里常驻「查看余额」
   autostart: false,   // 开机自启
+  followDsh: true,    // 跟着 DSH 走：DSH 起来她也起来（靠桥插件拉起）
 };
 
 let cache = null;

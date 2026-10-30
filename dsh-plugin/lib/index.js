@@ -5,6 +5,7 @@
 //   ② 数据：GET  http://127.0.0.1:47824/state   （桌面端点"查看余额"来取）
 // 事件翻译逻辑在 bridge.js，跟插件版共用同一份。
 
+import { spawn } from 'node:child_process'
 import fs from 'node:fs'
 import http from 'node:http'
 import os from 'node:os'
@@ -100,6 +101,22 @@ function spendToday(amount) {
 }
 
 const log = (...a) => { try { console.log('[capri-bridge]', ...a) } catch { /* 忽略 */ } }
+
+// 「跟随 DSH」：她在设置里勾了就写 ~/.capri-follow-dsh，DSH 起来时把她拉起来
+const FOLLOW_FLAG = path.join(os.homedir(), '.capri-follow-dsh')
+const APP_PATH = process.env.CAPRI_APP_PATH || '/Applications/摩羯.app'
+
+function launchPetIfWanted() {
+  try {
+    if (!fs.existsSync(FOLLOW_FLAG)) return
+    // 已经在跑就别重复开（open -g 本身幂等，这里再加一层）
+    fetch('http://127.0.0.1:47823/health', { signal: AbortSignal.timeout(600) })
+      .then((res) => { if (res.ok) return })
+      .catch(() => {
+        try { spawn('open', ['-g', APP_PATH], { detached: true, stdio: 'ignore' }).unref() } catch (err) { log('拉起她失败', err && err.message) }
+      })
+  } catch (err) { log('跟随 DSH 出错', err && err.message) }
+}
 
 export const name = 'dsh-capri'
 
@@ -223,6 +240,7 @@ export function apply(ctx, rawConfig = {}) {
     }
   } catch { /* 忽略 */ }
 
+  launchPetIfWanted()
   log('已挂载：事件→47823，余额→47824')
 }
 

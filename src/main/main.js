@@ -199,10 +199,20 @@ function rendererConfig() {
   return { ...cfg, scale, scaleAuto: Boolean(cfg.scaleAuto), lang: resolveLang(cfg.lang), langSetting: 'zh', dshEdition: DSH_EDITION };
 }
 
+// 「跟随 DSH」：标记文件 ~/.capri-follow-dsh，DSH 的桥插件启动时看到它就把她拉起来
+function syncFollowFlag(cfg) {
+  const flag = path.join(app.getPath('home'), '.capri-follow-dsh');
+  try {
+    if (cfg.followDsh !== false) fs.writeFileSync(flag, '1');
+    else fs.rmSync(flag, { force: true });
+  } catch (err) { console.error('[capri] 跟随 DSH 标记写不进去', err.message); }
+}
+
 function updateConfig(patch) {
   const before = config.load();
   config.save(patch);
   const after = config.load();
+  syncFollowFlag(after);
   // 开机自启：改了就立刻跟系统同步
   if ('autostart' in patch || before.autostart !== after.autostart) {
     try {
@@ -593,6 +603,7 @@ function main() {
   app.whenReady().then(() => {
     serveProtocol();
     registerIpc();
+    syncFollowFlag(config.load());
     createOverlay();
     createTray();
     startIdleWatch();

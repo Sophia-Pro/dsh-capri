@@ -88,11 +88,14 @@ async function boot() {
   const onChip = () => Boolean(chip.visible && mouse && chip.contains(mouse.x, mouse.y, 0));
   const refreshHit = () => {
     if (capri.dragging) return setInteractive(true);
+    // 菜单或设置开着：整层都要接鼠标，不然点不动
+    if (settings && settings.isOpen()) return setInteractive(true);
     if (!mouse) return setInteractive(false);
     const r = panel.rect();
     const onPanel = r && mouse.x >= r.left && mouse.x <= r.right && mouse.y >= r.top && mouse.y <= r.bottom;
-    document.body.style.cursor = onChip() ? 'pointer' : '';
-    return setInteractive(Boolean(onPanel || capri.hit(mouse.x, mouse.y) || onChip()));
+    const onSettings = Boolean(settings && settings.contains(mouse.x, mouse.y));
+    document.body.style.cursor = onChip() || onSettings ? 'pointer' : '';
+    return setInteractive(Boolean(onPanel || onSettings || capri.hit(mouse.x, mouse.y) || onChip()));
   };
   // Her biochip: her eyes on it follow the pointer over it, and she comes out when you click it
   // (only then, so the pointer passing through that corner doesn't call her back).
@@ -438,6 +441,7 @@ async function boot() {
       unstow: () => capri.unstow(),
     },
   });
+  settings.onOpenChange = (open) => { setInteractive(Boolean(open)); if (!open) refreshHit(); };
   window.__settings = settings;
   window.__showBalance = showBalance;
   settings.cfg = cfgNow = config;

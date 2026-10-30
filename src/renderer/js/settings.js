@@ -28,6 +28,30 @@ export class Settings {
     this.cfg = null
   }
 
+  // 菜单或设置面板开着时，鼠标落到它们上面要算"可点"，否则点不动
+  isOpen() {
+    return Boolean(this.menu || this.dialog)
+  }
+
+  contains(x, y) {
+    for (const n of [this.menu, this.dialog]) {
+      if (!n) continue
+      const r = n.getBoundingClientRect()
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return true
+    }
+    return false
+  }
+
+  // 她身上那块大概的框（用来把菜单放到不挡她的地方）
+  capriBox() {
+    const c = this.capri
+    if (!c) return null
+    const s = c.scale
+    const x = c.pos.x
+    const feet = c.pos.y
+    return { left: x - 150 * s, right: x + 150 * s, top: feet - 470 * s, bottom: feet + 6, cx: x }
+  }
+
   get config() {
     return this.cfg || (this.cfg = this.host.getConfig())
   }
@@ -55,11 +79,38 @@ export class Settings {
   }
 
   // ---------- 右键菜单 ----------
+  // 贴着人物放，且不压住她：优先头顶上方，不行就放她侧面（离屏幕中远的那侧）
+  placeMenu(m, at) {
+    const r = m.getBoundingClientRect()
+    const box = this.capriBox()
+    let left
+    let top
+    if (box) {
+      top = box.top - r.height - 10
+      if (top < 8) top = box.bottom - r.height - 10
+      if (top < 8) top = 8
+      const preferOuter = box.cx > innerWidth / 2
+      left = preferOuter ? box.left - r.width - 12 : box.right + 12
+      if (left < 8) left = box.right + 12
+      if (left + r.width > innerWidth - 8) left = box.left - r.width - 12
+    } else {
+      left = (at && at.x) || innerWidth - 240
+      top = (at && at.y) || innerHeight - 260
+    }
+    left = Math.max(8, Math.min(left, innerWidth - r.width - 8))
+    top = Math.max(8, Math.min(top, innerHeight - r.height - 8))
+    m.style.left = Math.round(left) + 'px'
+    m.style.top = Math.round(top) + 'px'
+  }
+
   closeMenu() {
-    if (this.menu) { this.menu.remove(); this.menu = null }
+    if (this._follow) { clearInterval(this._follow); this._follow = null }
+    if (this._outside) { document.removeEventListener('pointerdown', this._outside, true); this._outside = null }
+    if (this.menu) { this.menu.remove(); this.menu = null; this.onOpenChange?.(false) }
   }
 
   openMenu(at) {
+    if (this.menu) { this.closeMenu(); return }
     this.closeMenu()
     const cfg = this.config
     const m = el('div', { class: 'capri-menu' })
@@ -86,22 +137,34 @@ export class Settings {
 
     m.style.visibility = 'hidden'
     document.body.appendChild(m)
-    const x = at ? at.x : innerWidth - 240
-    const y = at ? at.y : innerHeight - 260
-    const r = m.getBoundingClientRect()
-    m.style.left = Math.max(8, Math.min(x, innerWidth - r.width - 8)) + 'px'
-    m.style.top = Math.max(8, Math.min(y, innerHeight - r.height - 8)) + 'px'
+    this.placeMenu(m, at)
     m.style.visibility = ''
     this.menu = m
-    setTimeout(() => {
-      const off = (e) => { if (!m.contains(e.target)) { this.closeMenu(); document.removeEventListener('pointerdown', off, true) } }
-      document.addEventListener('pointerdown', off, true)
-    }, 0)
+    this.onOpenChange?.(true)
+    // 她走动/瞬移的话，菜单跟着挪（但不压住她）
+    if (this._follow) clearInterval(this._follow)
+    this._follow = setInterval(() => {
+      if (!this.menu) { clearInterval(this._follow); this._follow = null; return }
+      this.placeMenu(this.menu)
+    }, 220)
+    // 点页面上空白处就关掉（别的软件的点击到不了这里，所以切走不会误关）
+    if (this._outside) document.removeEventListener('pointerdown', this._outside, true)
+    this._outside = (e) => { if (this.menu && !this.menu.contains(e.target)) this.closeMenu() }
+    document.addEventListener('pointerdown', this._outside, true)
+    // 不再"点空白就消失"：只有点条目、按 Esc、或者再右键她一下才关
+    if (!this._escBound) {
+      this._escBound = true
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return
+        if (this.menu) { this.closeMenu(); e.preventDefault() }
+        else if (this.dialog) { this.closePanel(); e.preventDefault() }
+      })
+    }
   }
 
   // ---------- 设置面板 ----------
   closePanel() {
-    if (this.dialog) { this.dialog.remove(); this.dialog = null }
+    if (this.dialog) { this.dialog.remove(); this.dialog = null; this.onOpenChange?.(false) }
   }
 
   openPanel() {
@@ -167,7 +230,8 @@ export class Settings {
     slider('活动范围', 'sideBand', 0.1, 0.4, 0.01, (v) => '边上 ' + Math.round(Number(v) * 100) + '%')
     // 8 附身窗口
     toggle('附身窗口', 'possess', '偶尔钻到她坐着的窗口里')
-    // 9 开机自启
+    // 9 跟随 DSH / 开机自启
+    toggle('跟随 DSH 启动', 'followDsh', 'DSH 起来她也起来（要装桥插件）')
     toggle('开机自启', 'autostart')
     // 10 余额显示
     toggle('气泡显示余额', 'balance', '单击她时多一个「查看余额」按钮')
@@ -179,6 +243,7 @@ export class Settings {
 
     document.body.appendChild(d)
     this.dialog = d
+    this.onOpenChange?.(true)
     d.addEventListener('contextmenu', (e) => e.preventDefault())
     document.addEventListener('keydown', function esc(e) {
       if (e.key === 'Escape') { document.removeEventListener('keydown', esc); d.remove() }
