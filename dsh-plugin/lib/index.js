@@ -85,6 +85,23 @@ function writeState(patch) {
   } catch { /* 写不进去不影响主流程 */ }
 }
 
+// ---------- 今日消耗账本（按事件累计，不靠余额差） ----------
+function readLedger() {
+  const s = readState()
+  const day = todayKey()
+  const led = s.ledger && s.ledger.day === day ? s.ledger : null
+  return led || { day, cost: 0, tokens: 0, turns: 0 }
+}
+
+function addSpend(cost, tokens) {
+  const led = readLedger()
+  led.cost = Number((led.cost + (Number(cost) || 0)).toFixed(6))
+  led.tokens = (Number(led.tokens) || 0) + (Number(tokens) || 0)
+  led.turns = (Number(led.turns) || 0) + 1
+  writeState({ ledger: led })
+  return led
+}
+
 function observeBalance(amount, currency) {
   const day = todayKey()
   const s = readState()
@@ -98,6 +115,28 @@ function spendToday(amount) {
   if (!rec || rec.day !== todayKey() || !Number.isFinite(Number(rec.start))) return null
   const used = Number(rec.start) - Number(amount)
   return used > 0 ? used : 0
+}
+
+
+// ---------- 计费（按 DeepSeek 官方价目表，含峰谷；元/百万 token） ----------
+const BASE_PRICE = { hit: [0.02, 0.04], miss: [1, 2], out: [4, 8] }
+const PRO_PRICE = { hit: [0.15, 0.3], miss: [4.5, 9.0], out: [13.5, 27.0] }
+const PRICING = {
+  'deepseek-flash': BASE_PRICE,
+  'deepseek-v4-flash': BASE_PRICE,
+  'deepseek-v4-flash-vision-exp': BASE_PRICE,
+  'deepseek-v4-pro': PRO_PRICE,
+  _default: BASE_PRICE,
+}
+function priceFor(model) {
+  const m = String(model || '').toLowerCase()
+  for (const key of Object.keys(PRICING)) if (key !== '_default' && m.indexOf(key) !== -1) return PRICING[key]
+  return PRICING._default
+}
+function costOf({ model, hit, miss, out, atSec }) {
+  const p = priceFor(model)
+  const off = isPeakTime(atSec) ? 1 : 0 // [0]=谷价 [1]=高峰
+  return (Number(hit) || 0) / 1e6 * p.hit[off] + (Number(miss) || 0) / 1e6 * p.miss[off] + (Number(out) || 0) / 1e6 * p.out[off]
 }
 
 const log = (...a) => { try { console.log('[capri-bridge]', ...a) } catch { /* 忽略 */ } }
@@ -151,6 +190,43 @@ export function apply(ctx, rawConfig = {}) {
     disposers.push(bridge.apply(ctx, { quota: false, log: Boolean(cfg.log) }))
   } catch (err) { log('事件桥挂了', err && err.message) }
 
+  // ---------- ①.5 今日消耗：按每轮 token + 峰谷价目表算，写进账本 ----------
+  const turnAgg = new Map() // sessionId -> {hit, miss, out, model, tokens}
+  function aggOf(session) {
+    const id = String((session && session.id) || 'default')
+    let a = turnAgg.get(id)
+    if (!a) { a = { hit: 0, miss: 0, out: 0, tokens: 0, model: '' }; turnAgg.set(id, a) }
+    return a
+  }
+  try {
+    disposers.push(ctx.on('session/event', (session, event) => {
+      try {
+        const type = String((event && event.type) || '')
+        const data = (event && event.data) || {}
+        if (type === 'assistant/message') {
+          const a = aggOf(session)
+          const usage = data.usage || (data.message && data.message.usage) || null
+          const model = String(data.model || (data.message && data.message.model) || '')
+          if (model) a.model = model
+          if (usage && typeof usage === 'object') {
+            a.hit += Number(usage.cacheReadTokens) || 0
+            a.miss += Number(usage.inputTokens) || Number(usage.promptTokens) || 0
+            a.out += Number(usage.outputTokens) || Number(usage.completionTokens) || 0
+          }
+          return
+        }
+        if (type === 'turn/end') {
+          const a = aggOf(session)
+          const atSec = Math.floor((Number(data.ts) || Date.now()) / 1000)
+          const tokens = a.hit + a.miss + a.out
+          const cost = costOf({ model: a.model, hit: a.hit, miss: a.miss, out: a.out, atSec })
+          if (tokens > 0) addSpend(cost, tokens)
+          turnAgg.set(String((session && session.id) || 'default'), { hit: 0, miss: 0, out: 0, tokens: 0, model: a.model })
+        }
+      } catch (err) { log('记账出错', err && err.message) }
+    }))
+  } catch (err) { log('订阅记账失败', err && err.message) }
+
   // ---------- ② 余额：给桌面端一个本地接口 ----------
   async function readBalance() {
     let account = null
@@ -185,11 +261,8 @@ export function apply(ctx, rawConfig = {}) {
     const peak = isPeakTime(nowSec)
     const next = nextPeakChangeAt(nowSec)
     const bal = balance || null
-    let today = null
-    if (bal) {
-      observeBalance(bal.amount, bal.currency)
-      today = spendToday(bal.amount)
-    }
+    const led = readLedger()
+    const today = Number(led.cost) || 0
     return {
       ok: true,
       version: pkgVersion,
@@ -197,6 +270,8 @@ export function apply(ctx, rawConfig = {}) {
       balance: bal ? bal.amount : null,
       currency: bal ? bal.currency : 'CNY',
       today,
+      tokensToday: Number(led.tokens) || 0,
+      turnsToday: Number(led.turns) || 0,
       peak,
       period: peak ? 'peak' : 'valley',
       peakHours: '9:00–12:00 / 14:00–18:00',

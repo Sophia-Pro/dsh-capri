@@ -308,7 +308,7 @@ export function apply(ctx, rawConfig = {}) {
         }));
         // 她在等你回答/批准：跟 Claude Code 的 permission_prompt 一样把她叫过来
         if (tool === 'AskUserQuestion') {
-          post(evt(s, { hook_event_name: 'Notification', notification_type: 'permission_prompt', message: 'DSH 在问你' }));
+          post(evt(s, { hook_event_name: 'Notification', notification_type: 'elicitation_dialog', message: 'DSH 在问你' }));
         }
         return;
       }

@@ -38,3 +38,43 @@
   background:rgba(255,46,136,.16);color:inherit;font:inherit;cursor:pointer;letter-spacing:.04em}
 .capri-settings__foot button:hover{background:#ff2e88;color:#0b0714}
 .capri-settings__foot button.ghost{background:transparent;border-color:rgba(255,46,136,.35)}
+
+/* ---------- 余额卡（高峰红 / 低谷绿） ---------- */
+.capri-card{position:fixed;z-index:44;width:302px;padding:12px 14px 10px;background:#0b0714;
+  border:2px solid var(--card-accent,#3dd68c);box-shadow:6px 6px 0 rgba(122,60,255,.5);
+  color:#f2e9ff;font:500 13px/1.45 'Chakra Petch','PingFang SC',system-ui,sans-serif;
+  pointer-events:auto}
+.capri-card[data-period="valley"]{--card-accent:#3dd68c;--card-soft:rgba(61,214,140,.16)}
+.capri-card[data-period="peak"]{--card-accent:#ff5a5a;--card-soft:rgba(255,90,90,.16)}
+.capri-card__head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.capri-card__who{font-weight:700;letter-spacing:.04em}
+.capri-card__tag{font-size:11px;padding:1px 6px;border:1px solid var(--card-accent);color:var(--card-accent);
+  background:var(--card-soft);letter-spacing:.06em}
+.capri-card__x{margin-left:auto;background:none;border:0;color:inherit;font-size:16px;line-height:1;
+  cursor:pointer;opacity:.6}
+.capri-card__x:hover{opacity:1;color:var(--card-accent)}
+.capri-card__big{font:700 26px/1.1 'JetBrains Mono',ui-monospace,monospace;color:var(--card-accent);letter-spacing:.01em}
+.capri-card__sub{font-size:11px;opacity:.55;margin:1px 0 8px}
+.capri-card__rows{border-top:1px dashed rgba(255,255,255,.14);border-bottom:1px dashed rgba(255,255,255,.14);
+  padding:5px 0;margin-bottom:8px}
+.capri-card__row{display:flex;justify-content:space-between;align-items:baseline;padding:1px 0}
+.capri-card__k{font-size:12px;opacity:.62}
+.capri-card__v{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12.5px}
+.capri-card__period{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--card-soft);
+  border-left:3px solid var(--card-accent)}
+.capri-card__dot{width:7px;height:7px;border-radius:50%;background:var(--card-accent);
+  box-shadow:0 0 8px var(--card-accent)}
+.capri-card__p{font-weight:700;color:var(--card-accent);letter-spacing:.03em}
+.capri-card__cd{margin-left:auto;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;opacity:.9}
+.capri-card__hint{font-size:10.5px;opacity:.45;margin-top:6px;line-height:1.35}
+.capri-card__foot{display:flex;justify-content:flex-end;margin-top:8px}
+.capri-card__btn{padding:3px 12px;border:1px solid var(--card-accent);background:var(--card-soft);
+  color:inherit;font:inherit;font-size:12px;cursor:pointer}
+.capri-card__btn:hover{background:var(--card-accent);color:#0b0714}
+
+/* ---------- 气泡按事件类型上色（提问/权限/完成/出错） ---------- */
+.panel[data-kind="alert"] .panel__tag{background:#ffcf5c;color:#241a00;border-color:#ffcf5c}
+.panel[data-kind="done"] .panel__tag{background:#3dd68c;color:#04220f;border-color:#3dd68c}
+.panel[data-kind="error"] .panel__tag{background:#ff5a5a;color:#2a0404;border-color:#ff5a5a}
+.panel[data-kind="alert"]{border-color:#ffcf5c;box-shadow:6px 6px 0 rgba(255,207,92,.35)}
+.panel[data-kind="done"]{border-color:#3dd68c;box-shadow:6px 6px 0 rgba(61,214,140,.3)}

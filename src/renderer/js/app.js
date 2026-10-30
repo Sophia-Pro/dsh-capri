@@ -7,12 +7,14 @@ import { Voice, CUES, CUE_LABELS } from './voice.js';
 import { Brain } from './brain.js';
 import { Guide } from './guide.js';
 import { Settings } from './settings.js';
+import { Card } from './card.js';
 import { LINES } from './lines.js';
 import { ACTS } from './acting.js';
 import { pick, fmt, tween, ease } from './util.js';
 
 const host = window.host;
 let settings = null;   // 右键菜单与设置面板（后面装）
+let balanceCard = null; // 余额卡（后面装）
 let cfgNow = {};       // 当前设置的一份快照
 
 function loadImage(src) {
@@ -90,12 +92,14 @@ async function boot() {
     if (capri.dragging) return setInteractive(true);
     // 菜单或设置开着：整层都要接鼠标，不然点不动
     if (settings && settings.isOpen()) return setInteractive(true);
+    if (balanceCard && balanceCard.visible) return setInteractive(true);
     if (!mouse) return setInteractive(false);
     const r = panel.rect();
     const onPanel = r && mouse.x >= r.left && mouse.x <= r.right && mouse.y >= r.top && mouse.y <= r.bottom;
     const onSettings = Boolean(settings && settings.contains(mouse.x, mouse.y));
+    const onCard = Boolean(balanceCard && balanceCard.visible && balanceCard.contains(mouse.x, mouse.y));
     document.body.style.cursor = onChip() || onSettings ? 'pointer' : '';
-    return setInteractive(Boolean(onPanel || onSettings || capri.hit(mouse.x, mouse.y) || onChip()));
+    return setInteractive(Boolean(onPanel || onSettings || onCard || capri.hit(mouse.x, mouse.y) || onChip()));
   };
   // Her biochip: her eyes on it follow the pointer over it, and she comes out when you click it
   // (only then, so the pointer passing through that corner doesn't call her back).
@@ -387,27 +391,17 @@ async function boot() {
   const guide = new Guide({ capri, panel, voice, host, brain });
   // the first Claude Code event that ever reaches her: so you know it worked
   // ---------- 右键菜单 / 设置面板 ----------
+  balanceCard = new Card({ capri, onRefresh: () => showBalance() });
   const showBalance = async () => {
     panel.hide();
+    balanceCard.show({ pending: true });
     const d = await host.balance(true);
     if (!d || !d.ok) {
+      balanceCard.hide();
       panel.say({ kind: 'error', tag: '余额', line: '余额暂时取不到', summary: (d && d.error) || '桥没开：先在 DSH 里启用 dsh-capri 插件', hold: 9000, force: true });
       return;
     }
-    const money = (n) => (d.currency === 'CNY' ? '¥' + Number(n).toFixed(2) : Number(n).toFixed(2) + ' ' + d.currency);
-    const when = d.nextChangeAt ? new Date(d.nextChangeAt) : null;
-    const hhmm = when ? String(when.getHours()).padStart(2, '0') + ':' + String(when.getMinutes()).padStart(2, '0') : '';
-    const price = d.peak ? '高峰 · 原价' : '谷时 · 半价';
-    panel.say({
-      kind: 'info',
-      tag: '余额',
-      line: '余额 ' + (d.balance != null ? money(d.balance) : '—'),
-      quote: '今天已用 ' + (d.today != null ? money(d.today) : '—') + '　·　' + price,
-      summary: '峰谷 9–12 / 14–18' + (hhmm ? '　·　' + hhmm + ' 切换' : ''),
-      hold: 20000,
-      force: true,
-      actions: [{ id: 'balanceRefresh', label: '刷新', primary: true }],
-    });
+    balanceCard.show(d);
   };
 
   settings = new Settings({
@@ -451,9 +445,10 @@ async function boot() {
   // 气泡里常驻「查看余额」；面板原来的按钮（引导）不动
   const sayBase = panel.say.bind(panel);
   panel.say = (msg = {}) => {
-    // 她在演动作/附身的时候别盖气泡（余额、错误这类明确要说的除外）
-    if (!msg.force && (capri.busy || capri.act || capri.possessed)) return null;
-    panel._force = Boolean(msg.force);
+    // 她在演动作/附身的时候别盖普通气泡；但"要你点头 / 干完了 / 出错"必须说
+    const important = msg.kind === 'alert' || msg.kind === 'done' || msg.kind === 'error';
+    if (!msg.force && !important && (capri.busy || capri.act || capri.possessed)) return null;
+    panel._force = Boolean(msg.force) || important;
     const actions = (msg.actions || []).filter((a) => a.id !== 'balance');
     const isBalance = msg.tag === '余额';
     if (!isBalance && cfgNow.balance !== false) actions.push({ id: 'balance', label: '查看余额' });
