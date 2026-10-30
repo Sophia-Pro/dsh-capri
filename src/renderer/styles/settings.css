@@ -10,17 +10,17 @@
 .capri-menu hr{margin:4px 6px;border:0;border-top:1px solid rgba(255,46,136,.35)}
 
 .capri-settings{position:fixed;z-index:45;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:min(560px,88vw);max-height:84vh;overflow:auto;background:#0b0714;
+  width:min(540px,86vw);overflow:visible;background:#0b0714;
   border:2px solid #ff2e88;box-shadow:8px 8px 0 rgba(122,60,255,.55);color:#f2e9ff;
   font:500 13px/1.45 'Chakra Petch','PingFang SC',system-ui,sans-serif}
-.capri-settings__head{padding:16px 18px 10px;border-bottom:1px solid rgba(255,46,136,.3)}
+.capri-settings__head{padding:13px 16px 8px;border-bottom:1px solid rgba(255,46,136,.3)}
 .capri-settings h2{margin:0 0 3px;font-size:16px;letter-spacing:.06em;color:#ff2e88;font-weight:700}
 .capri-settings p.sub{margin:0;font-size:11.5px;opacity:.6}
-.capri-settings__body{padding:6px 18px 4px}
-.capri-settings .sec{margin:14px 0 4px;padding-bottom:3px;font-size:11px;letter-spacing:.14em;
+.capri-settings__body{padding:2px 16px 2px}
+.capri-settings .sec{margin:10px 0 2px;padding-bottom:3px;font-size:11px;letter-spacing:.14em;
   text-transform:uppercase;color:#ff2e88;opacity:.85;border-bottom:1px dashed rgba(255,46,136,.25)}
 .capri-settings .row{display:grid;grid-template-columns:132px 1fr auto;align-items:center;gap:10px;
-  min-height:32px;padding:2px 0}
+  min-height:29px;padding:1px 0}
 .capri-settings .row--sub{grid-template-columns:132px 1fr auto;opacity:.95;
   border-left:2px solid rgba(255,46,136,.35);margin-left:-6px;padding-left:8px}
 .capri-settings .row label{font-weight:600;letter-spacing:.02em}
@@ -32,7 +32,7 @@
 .capri-settings select{background:#160f24;color:#f2e9ff;border:1px solid rgba(255,46,136,.5);
   border-radius:4px;padding:3px 8px;font:inherit;justify-self:end}
 .capri-settings input[type=checkbox]{width:17px;height:17px;accent-color:#ff2e88;cursor:pointer}
-.capri-settings__foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px 16px;
+.capri-settings__foot{display:flex;gap:8px;justify-content:flex-end;padding:10px 16px 13px;
   border-top:1px solid rgba(255,46,136,.3);margin-top:6px}
 .capri-settings__foot button{padding:6px 16px;border:1px solid rgba(255,46,136,.6);
   background:rgba(255,46,136,.16);color:inherit;font:inherit;cursor:pointer;letter-spacing:.04em}

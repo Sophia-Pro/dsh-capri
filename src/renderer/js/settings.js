@@ -54,11 +54,21 @@ export class Settings {
     return { left: c.pos.x - 150 * s, right: c.pos.x + 150 * s, top: c.pos.y - 470 * s, bottom: c.pos.y + 6, cx: c.pos.x }
   }
 
-  // 打开/关闭任一层时统一处理：整层接鼠标 + 窗口可聚焦（失焦由主进程通知）
+  // 打开/关闭任一层时统一处理：整层接鼠标（不抢系统焦点，避免开了就闪）
   setOpenState(open) {
-    if (open) this.host.setFocusable?.(true)
-    else if (!this.isOpen()) this.host.setFocusable?.(false)
     this.onOpenChange?.(Boolean(open))
+    this.bindOutside()
+  }
+
+  // 菜单/设置开着时，点空白处（别的窗口的点击也会先落到这层）就收起来
+  bindOutside() {
+    if (this._outside) { document.removeEventListener('pointerdown', this._outside, true); this._outside = null }
+    if (!this.isOpen()) return
+    this._outside = (e) => {
+      if (this.menu && !this.menu.contains(e.target)) { this.closeMenu(); return }
+      if (this.dialog && !this.dialog.contains(e.target)) this.closePanel()
+    }
+    document.addEventListener('pointerdown', this._outside, true)
   }
 
   async patch(patch) {

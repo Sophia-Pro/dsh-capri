@@ -469,23 +469,7 @@ async function boot() {
   };
 
   // 点到别的软件、窗口失焦 → 菜单和设置一起收
-  // 菜单/设置：刚打开 500ms 内不吃 blur；确认真的没焦点才收
-  let openedAt = 0
-  if (settings) {
-    const prev = settings.onOpenChange
-    settings.onOpenChange = (open) => {
-      if (open) openedAt = Date.now()
-      prev?.(open)
-    }
-  }
-  host.onBlur?.(() => {
-    setTimeout(() => {
-      if (Date.now() - openedAt < 500) return
-      if (document.hasFocus()) return
-      settings?.closeAll?.()
-    }, 200)
-  })
-
+  // 菜单/设置：开着的时候整层接鼠标，点哪里都由这一层收（不靠窗口焦点，省得闪）
   // 电脑空闲 → 播放收起来的动画；回来 → 出来
   host.onIdle(({ on }) => {
     if (!cfgNow.idleStowMin) return;
