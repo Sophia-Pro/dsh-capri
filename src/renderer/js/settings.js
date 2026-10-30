@@ -121,7 +121,7 @@ export class Settings {
     item('查看余额', '', () => this.commands.balance?.())
     item(this.capri?.stowed ? '叫她出来' : '收起来', '', () => (this.capri?.stowed ? this.commands.unstow?.() : this.commands.stow?.()))
     m.appendChild(el('hr'))
-    item('叫她过来', '', () => this.commands.comeHere?.())
+    item('叫到光标边', '', () => this.commands.comeHere?.())
     item('去左边', '', () => this.commands.goLeft?.())
     item('去右边', '', () => this.commands.goRight?.())
     m.appendChild(el('hr'))

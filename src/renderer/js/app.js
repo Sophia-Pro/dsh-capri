@@ -75,6 +75,34 @@ async function boot() {
   capri.possessWindows = config.possess;
   capri.setScale(config.scale);
 
+  // 动作音效：只给原本没声音的动作补，避免和 onCue 里的音重复
+  const ACT_CUES = {
+    grabbed: 'zip',
+    held: 'purr',
+    tumble: 'slam',
+    leap: 'rise',
+    ko: 'land',
+    crouch: 'tap',
+    huff: 'sigh',
+    shake: 'glitch',
+    touchdown: 'land',
+    drained: 'sigh',
+    overheat: 'steam',
+    plop: 'tap',
+    turn: 'tick',
+    fold: 'zip',
+    smear: 'whirl',
+    point: 'tap',
+    pointing: 'tap',
+    unpoint: 'tick',
+    flinch: 'tick',
+  };
+  capri.actSound = (name) => {
+    const cue = ACT_CUES[name];
+    if (!cue) return;
+    try { voice.play(cue) } catch { /* 忽略 */ }
+  };
+
   const brain = new Brain({ capri, panel, voice, host, lang: config.lang });
 
   // Click-through everywhere except on her body, the panel and her biochip.
