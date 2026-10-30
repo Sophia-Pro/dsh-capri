@@ -46,7 +46,8 @@ window.__ModuleLoader__.load({
       return h('div', { style: ROW }, h('span', { style: LABEL }, props.label), props.children)
     }
 
-    function CapriCard() {
+    function CapriCard(props) {
+      const view = (props && props.view) || 'page'
       const [cfg, setCfg] = useState(null)
       const [err, setErr] = useState('')
       const [saved, setSaved] = useState(false)
@@ -56,6 +57,11 @@ window.__ModuleLoader__.load({
       }, [])
       useEffect(() => { reload() }, [reload])
 
+      // 列表行里只放一句简介；点进去（view=page）才是表单
+      if (view === 'summary') {
+        return h('div', { style: { opacity: 0.7, fontSize: 12 } },
+          '住在 DSH 页面里的挂件：安静模式、空闲收起、大小与站边')
+      }
       if (err) return h('div', { style: CARD }, '摩羯：读不到设置（', err, '）')
       if (!cfg) return h('div', { style: CARD }, '摩羯：读取中…')
 
