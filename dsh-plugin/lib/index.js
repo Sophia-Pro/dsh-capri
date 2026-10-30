@@ -131,7 +131,24 @@ function readHistoryToday() {
   return null
 }
 
+// 今天的起点余额：当天第一次看到余额时记下来，之后的余额差就是"今天花掉的"
+function noteDayStart(amount, currency) {
+  const day = todayKey()
+  const s = readState()
+  const rec = s.dayStart && s.dayStart.day === day ? s.dayStart : { day, amount, currency }
+  if (!s.dayStart || s.dayStart.day !== day) writeState({ dayStart: rec })
+  return rec
+}
+
+function balanceSpentToday(amount) {
+  const rec = readState().dayStart
+  if (!rec || rec.day !== todayKey() || !Number.isFinite(Number(rec.amount))) return 0
+  const used = Number(rec.amount) - Number(amount)
+  return used > 0 ? used : 0
+}
+
 function observeBalance(amount, currency) {
+  noteDayStart(amount, currency)
   const day = todayKey()
   const s = readState()
   const rec = s.ledger && s.ledger.day === day ? s.ledger : { day, start: amount, currency }
@@ -172,18 +189,55 @@ const log = (...a) => { try { console.log('[capri-bridge]', ...a) } catch { /* �
 
 // 「跟随 DSH」：她在设置里勾了就写 ~/.capri-follow-dsh，DSH 起来时把她拉起来
 const FOLLOW_FLAG = path.join(os.homedir(), '.capri-follow-dsh')
-const APP_PATH = process.env.CAPRI_APP_PATH || '/Applications/摩羯.app'
+const LAUNCH_LOG = path.join(DSH_HOME, 'capri-bridge-launch.log')
 
-function launchPetIfWanted() {
+function launchLog(msg) {
+  try { fs.appendFileSync(LAUNCH_LOG, `${new Date().toISOString()} ${msg}\n`) } catch { /* 忽略 */ }
+}
+
+function petAppPath() {
+  const cands = [
+    process.env.CAPRI_APP_PATH,
+    '/Applications/摩羯.app',
+    path.join(os.homedir(), 'Applications', '摩羯.app'),
+  ].filter(Boolean)
+  return cands.find((p) => { try { return fs.existsSync(p) } catch { return false } }) || null
+}
+
+async function petAlive() {
   try {
-    if (!fs.existsSync(FOLLOW_FLAG)) return
-    // 已经在跑就别重复开（open -g 本身幂等，这里再加一层）
-    fetch('http://127.0.0.1:47823/health', { signal: AbortSignal.timeout(600) })
-      .then((res) => { if (res.ok) return })
-      .catch(() => {
-        try { spawn('open', ['-g', APP_PATH], { detached: true, stdio: 'ignore' }).unref() } catch (err) { log('拉起她失败', err && err.message) }
-      })
-  } catch (err) { log('跟随 DSH 出错', err && err.message) }
+    const res = await fetch('http://127.0.0.1:47823/health', { signal: AbortSignal.timeout(800) })
+    return res.ok
+  } catch { return false }
+}
+
+// 「跟随 DSH」：DSH 一启动就把她拉起来（已经在跑就不动）
+async function launchPetIfWanted() {
+  try {
+    if (!fs.existsSync(FOLLOW_FLAG)) { launchLog('没开跟随（没有标记文件）'); return }
+    if (await petAlive()) { launchLog('她已经在了'); return }
+    const app = petAppPath()
+    if (!app) { launchLog('找不到摩羯.app'); return }
+    // 直接跑包里的可执行文件（macOS 的 `open` 在装了带同 bundle id 的旧副本时会静默不启动）
+    const exe = path.join(app, 'Contents', 'MacOS', 'Electron')
+    // 关键：DSH 自己是 ELECTRON_RUN_AS_NODE=1 跑的，子进程必须去掉这个变量，否则她也变成 node 起来就退出
+    const childEnv = { ...process.env }
+    delete childEnv.ELECTRON_RUN_AS_NODE
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        if (fs.existsSync(exe)) {
+          spawn(exe, [], { detached: true, stdio: 'ignore', env: childEnv }).unref()
+          launchLog(`第 ${attempt} 次启动 ${exe}`)
+        } else {
+          spawn('open', ['-g', app], { detached: true, stdio: 'ignore', env: childEnv }).unref()
+          launchLog(`第 ${attempt} 次启动(open) ${app}`)
+        }
+      } catch (err) { launchLog('spawn 失败: ' + (err && err.message)) }
+      await new Promise((r) => setTimeout(r, 1500 * attempt))
+      if (await petAlive()) { launchLog('起来了'); return }
+    }
+    launchLog('三次都没起来')
+  } catch (err) { launchLog('跟随 DSH 出错: ' + (err && err.message)) }
 }
 
 export const name = 'dsh-capri'
@@ -292,8 +346,12 @@ export function apply(ctx, rawConfig = {}) {
     const bal = balance || null
     const led = readLedger()
     const hist = readHistoryToday()
-    // 有历史账本就以它为准（含本次开机之前的消耗），否则用自己记的
-    const today = hist ? hist.cost : Number(led.cost) || 0
+    // 自己记的账本为主；打开时先看一眼"今天的起点余额"，用余额差兜住开机之前的消耗。
+    // 有 DSH 用量账本（鲸鱼挂件）时，它的历史更全，取三者最大，宁多算不少算。
+    const own = Number(led.cost) || 0
+    const byBalance = bal ? balanceSpentToday(bal.amount) : 0
+    const byHistory = hist ? Number(hist.cost) || 0 : 0
+    const today = Math.max(own, byBalance, byHistory)
     return {
       ok: true,
       version: pkgVersion,
@@ -301,9 +359,9 @@ export function apply(ctx, rawConfig = {}) {
       balance: bal ? bal.amount : null,
       currency: bal ? bal.currency : 'CNY',
       today,
-      tokensToday: hist ? hist.tokens : Number(led.tokens) || 0,
-      turnsToday: hist ? hist.turns : Number(led.turns) || 0,
-      todaySource: hist ? 'history' : 'ledger',
+      tokensToday: Math.max(Number(led.tokens) || 0, hist ? Number(hist.tokens) || 0 : 0),
+      turnsToday: Math.max(Number(led.turns) || 0, hist ? Number(hist.turns) || 0 : 0),
+      todaySource: byHistory >= own ? 'history' : (byBalance > own ? 'balance' : 'ledger'),
       peak,
       period: peak ? 'peak' : 'valley',
       peakHours: '9:00–12:00 / 14:00–18:00',
@@ -347,7 +405,7 @@ export function apply(ctx, rawConfig = {}) {
     }
   } catch { /* 忽略 */ }
 
-  launchPetIfWanted()
+  void launchPetIfWanted()
   log('已挂载：事件→47823，余额→47824')
 }
 
