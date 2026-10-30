@@ -293,8 +293,17 @@ async function boot() {
       }
       // 不管哪套，落定之后都要把"现在手上是什么活"说出来
       brain.status();
+    } catch (err) {
+      console.error('[capri] 入场演砸了', err);
     } finally {
       entranceRunning = false;
+      // 不管开场怎么收场，她都得在场上站着（开场会把 alpha 压到 0）
+      if (!capri.stowed) {
+        capri.p.alpha = 1;
+        capri.p.collapse = 0;
+        capri.p.dissolve = 0;
+        try { capri.place() } catch { /* 忽略 */ }
+      }
     }
   }
 

@@ -7,12 +7,16 @@
   "icon": "./icon.png",
   "exports": {
     ".": "./lib/index.js",
+    "./client": "./client/index.js",
     "./package.json": "./package.json",
     "./cordis.patch.yml": "./cordis.patch.yml"
   },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
     }
   },
   "keywords": [

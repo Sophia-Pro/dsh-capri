@@ -76,6 +76,9 @@
 
   // ---------- 运行时状态 ----------
   const state = {
+    bootAt: Date.now(),
+    errors: [],
+    heals: 0,
     config: null,
     events: null,     // EventSource
     onClaude: null,
@@ -88,6 +91,16 @@
     menu: null,
     capri: null,
   };
+
+  // 页面里抛的错记下来，跟诊断一起上报（她"演完就没了"那种问题全靠这个定位）
+  window.addEventListener('error', (e) => {
+    try { state.errors.push({ t: Date.now(), m: String(e.message || e.error || ''), at: String(e.filename || '') + ':' + e.lineno }) } catch { /* 忽略 */ }
+    if (state.errors.length > 12) state.errors.shift();
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    try { state.errors.push({ t: Date.now(), m: 'unhandled: ' + String((e.reason && e.reason.message) || e.reason) }) } catch { /* 忽略 */ }
+    if (state.errors.length > 12) state.errors.shift();
+  });
 
   // ---------- host：原来 Electron 主进程那一套，现在全走本地 HTTP ----------
   const host = {
@@ -226,6 +239,58 @@
     }
   }
 
+  // ---------- 看门狗：她演完开场之后不该凭空消失 ----------
+  // 开场会把 alpha 压到 0 再补间回来；万一中途抛错（浏览器差异、特效层失败），
+  // 她就永远透明了 —— 这里每两秒看一眼：不在收着、不在忙、没有动作、却不可见，就救回来。
+  function watchdog() {
+    const capri = state.capri;
+    if (!capri) return;
+    const p = capri.p || {};
+    const hidden = Number(p.alpha) < 0.05;
+    const stuck = !capri.stowed && !capri.busy && !capri.act && hidden;
+    if (stuck && Date.now() - state.bootAt > 6000) {
+      state.heals += 1;
+      p.alpha = 1; p.collapse = 0; p.dissolve = 0;
+      try { capri.wake && capri.wake() } catch { /* 忽略 */ }
+      try { capri.place && capri.place() } catch { /* 忽略 */ }
+      try { capri.teleport && capri.teleport(capri.spot('post')) } catch { /* 忽略 */ }
+      log('看门狗把她救回来了', state.heals);
+    }
+  }
+  function diag() {
+    const capri = state.capri;
+    const p = capri && capri.p ? capri.p : {};
+    const body = {
+      booted: !!window.__capriBooted,
+      bootAt: state.bootAt,
+      now: Date.now(),
+      view: { w: innerWidth, h: innerHeight },
+      root: !!document.getElementById('capri-root'),
+      stowed: !!(capri && capri.stowed),
+      busy: !!(capri && capri.busy),
+      act: !!(capri && capri.act),
+      stance: capri && capri.stance,
+      pos: capri && capri.pos,
+      scale: capri && capri.scale,
+      side: capri && capri.side,
+      alpha: p.alpha,
+      collapse: p.collapse,
+      dissolve: p.dissolve,
+      quiet: state.quiet,
+      idleMin: state.idleMin,
+      heals: state.heals,
+      errors: state.errors.slice(-6),
+      sse: state.events ? state.events.readyState : -1,
+    };
+    fetch(BASE + '/diag', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).catch(() => {});
+  }
+  function startWatch() {
+    setInterval(watchdog, 2000);
+    setInterval(diag, 15000);
+    setTimeout(diag, 4000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) noteInput() });
+  }
+
   // ---------- 空闲收起 ----------
   function noteInput() {
     state.lastInput = Date.now();
@@ -339,6 +404,7 @@
       applyConfig(state.config);
       setQuiet(state.quiet);
       watchIdle();
+      startWatch();
       window.__capriControl = {
         quiet: (on) => toggleQuiet(on),
         idleMin: (m) => setConfig({ idleMin: m }),

@@ -7,10 +7,15 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { apply, name } from '../lib/index.js'
+// 隔离配置目录：别让测试写到真实的 ~/.dsh/capri.json
+const TMP_HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-capri-test-'))
+process.env.DSH_HOME = TMP_HOME
+
+const { apply, name } = await import('../lib/index.js')
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
