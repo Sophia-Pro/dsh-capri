@@ -475,6 +475,33 @@ async function boot() {
   panel.hide = () => { hideBase(); brain.flushAct?.(); };
 
   // 点到别的软件、窗口失焦 → 菜单和设置一起收
+  // 环境感知：U 盘/电源/负载 → 说一句（桥是主进程每 20 秒看一次）
+  host.onAmbient?.((data) => {
+    if (cfgNow.ambient === false) return
+    brain.ambient(data);
+  });
+
+  // 偷看：时不时朝当前活动窗口转过去看一眼（不截图，纯转头 + 说话）
+  let peekTimer = null;
+  const schedulePeek = () => {
+    if (peekTimer) clearTimeout(peekTimer);
+    peekTimer = setTimeout(() => {
+      try {
+        const cfg = cfgNow;
+        const wins = capri.windows?.wins || [];
+        const fg = wins.find((w) => w.id === capri.windows?.fg);
+        if (cfg.peek !== false && !cfg.quiet && fg && !capri.busy && !capri.stowed && !brain.night) {
+          const cx = fg.x + fg.w / 2;
+          capri.faceToward?.(cx);
+          if (Math.random() < 0.45) brain.ambient({ type: 'peek' });
+          if (Math.random() < 0.5) capri.perform?.(Math.random() < 0.5 ? 'curious' : 'look');
+        }
+      } catch { /* 忽略 */ }
+      schedulePeek();
+    }, (3 + Math.random() * 4) * 60 * 1000);
+  };
+  schedulePeek();
+
   // 菜单/设置：开着的时候整层接鼠标，点哪里都由这一层收（不靠窗口焦点，省得闪）
   // 按时间段换性格：深夜安静、上午精神、白天正常、傍晚略活跃
   function timePhase() {

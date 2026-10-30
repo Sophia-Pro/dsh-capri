@@ -1,7 +1,8 @@
 'use strict';
 
 const path = require('node:path');
-const { execFile } = require('node:child_process');
+const { execFile, execFileSync } = require('node:child_process');
+const os = require('node:os');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
 const {
@@ -230,6 +231,48 @@ function startFollowExitWatch() {
       }
     } catch { /* 忽略 */ }
   }, 8000);
+}
+
+// ---------- 环境感知：插了什么、电源变了没、机器吃不吃力 ----------
+let lastVolumes = null;
+let lastPower = '';
+let lastCpuHighAt = 0;
+
+function readVolumes() {
+  try { return fs.readdirSync('/Volumes').filter((n) => !n.startsWith('.')) } catch { return [] }
+}
+function readPower() {
+  try {
+    const out = execFileSync('/usr/bin/pmset', ['-g', 'batt'], { timeout: 1500 }).toString()
+    if (/AC Power/i.test(out)) return 'ac'
+    if (/Battery Power/i.test(out)) return 'battery'
+    return ''
+  } catch { return '' }
+}
+function startAmbientWatch() {
+  setInterval(() => {
+    try {
+      const cfg = config.load()
+      if (cfg.ambient === false) return
+      const vols = readVolumes()
+      if (lastVolumes) {
+        const added = vols.filter((v) => !lastVolumes.includes(v))
+        const removed = lastVolumes.filter((v) => !vols.includes(v))
+        if (added.length) overlay?.webContents.send('capri:ambient', { type: 'device-in', names: added })
+        if (removed.length) overlay?.webContents.send('capri:ambient', { type: 'device-out', names: removed })
+      }
+      lastVolumes = vols
+      const pw = readPower()
+      if (lastPower && pw && pw !== lastPower) overlay?.webContents.send('capri:ambient', { type: 'power', state: pw })
+      lastPower = pw || lastPower
+      const load = os.loadavg()[0]
+      const cores = Math.max(1, (os.cpus() || []).length)
+      if (load / cores > 0.85 && Date.now() - lastCpuHighAt > 10 * 60 * 1000) {
+        lastCpuHighAt = Date.now()
+        overlay?.webContents.send('capri:ambient', { type: 'cpu', load: Math.round(load * 10) / 10, cores })
+      }
+    } catch { /* 忽略 */ }
+  }, 20000)
 }
 
 function syncFollowFlag(cfg) {
@@ -657,6 +700,8 @@ function main() {
     });
     createTray();
     startIdleWatch();
+    startFollowExitWatch();
+    startAmbientWatch();
     windowWatch = startWindowWatch({
       overlay,
       onUpdate: (data) => {

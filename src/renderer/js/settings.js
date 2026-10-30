@@ -306,6 +306,8 @@ export class Settings {
     toggle('自动朝向', 'autoFacing', '在左边朝右，在右边朝左')
     sliderRow('活动区域', 'sideBand', 0.1, 0.4, 0.01, (v) => '两侧各 ' + Math.round(Number(v) * 100) + '%')
     toggle('窗口附身', 'possess', '偶尔钻到她坐着的窗口里')
+    toggle('设备感知', 'ambient', '插 U 盘、电源变化、机器吃力时说一句')
+    toggle('偷看屏幕', 'peek', '时不时朝活动窗口探一眼（不截图）')
 
     // —— 声音 ——
     section('声音')

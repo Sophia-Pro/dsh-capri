@@ -41,6 +41,41 @@ en: {
     subagentStop: ['Subagent {agent} is back.'],
     compact: ['Compressing our memories…', 'Too much memory. Tidying up.'],
     bye: ['Session {project} closed. Later.', 'Disconnected. I’ll be around.'],
+    deviceIn: [
+      '{name} 插上了。要干嘛。',
+      '哟，{name}。你又带了什么回来。',
+      '{name} 认到了。别乱塞东西。',
+      '接了 {name}。我记下了。',
+      '{name} 挂上来。看你能撑多久。',
+    ],
+    deviceOut: [
+      '{name} 拔了。',
+      '走了？{name} 拿走了。',
+      '{name} 没影了。',
+      '拔得干脆。{name} 走了。',
+    ],
+    powerAc: [
+      '插上电了。那就通宵吧。',
+      '来电源了。你别太得意。',
+      '有电。接着磨。',
+    ],
+    powerBattery: [
+      '电池了。省着点。',
+      '拔电了？你心里有数。',
+      '没电撑着，别怪我没提醒。',
+    ],
+    cpuHot: [
+      '机器有点烫。{load} 了。',
+      'CPU 在喘。{load}，悠着点。',
+      '快烧起来了。{load}。',
+    ],
+    peek: [
+      '那边窗口有点动静。',
+      '我看一眼你那边。',
+      '那窗口在闪。我盯着。',
+      '你在忙啥，我瞧瞧。',
+      '别以为我没看见。',
+    ],
     chatter: [
     ],
     balance: [
@@ -300,6 +335,41 @@ en: {
       '撤了。{project} 留着。',
       '关灯。别想我。',
       '{project} 到此为止。',
+    ],
+    deviceIn: [
+      '{name} 插上了。要干嘛。',
+      '哟，{name}。你又带了什么回来。',
+      '{name} 认到了。别乱塞东西。',
+      '接了 {name}。我记下了。',
+      '{name} 挂上来。看你能撑多久。',
+    ],
+    deviceOut: [
+      '{name} 拔了。',
+      '走了？{name} 拿走了。',
+      '{name} 没影了。',
+      '拔得干脆。{name} 走了。',
+    ],
+    powerAc: [
+      '插上电了。那就通宵吧。',
+      '来电源了。你别太得意。',
+      '有电。接着磨。',
+    ],
+    powerBattery: [
+      '电池了。省着点。',
+      '拔电了？你心里有数。',
+      '没电撑着，别怪我没提醒。',
+    ],
+    cpuHot: [
+      '机器有点烫。{load} 了。',
+      'CPU 在喘。{load}，悠着点。',
+      '快烧起来了。{load}。',
+    ],
+    peek: [
+      '那边窗口有点动静。',
+      '我看一眼你那边。',
+      '那窗口在闪。我盯着。',
+      '你在忙啥，我瞧瞧。',
+      '别以为我没看见。',
     ],
     chatter: [
       '点我干嘛。有事说事。',

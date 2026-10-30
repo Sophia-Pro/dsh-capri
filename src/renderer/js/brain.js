@@ -356,6 +356,28 @@ export class Brain {
 
   // What she says when you click her.
   // 单击她：随机一句——今天烧了多少 token、还剩多少额度、手上这单、或者一句闲话
+  // 环境：插了什么、电源变了、机器吃力，或者她自己偷看一眼
+  ambient(data) {
+    if (!data || !data.type) return
+    const t = this.t
+    if (data.type === 'device-in') {
+      return this.say('info', fmt(pick(t.deviceIn || ['{name} 插上了。']), { name: (data.names || []).join('、') }), null, { face: pick(['wide', 'look']), hold: 3600 })
+    }
+    if (data.type === 'device-out') {
+      return this.say('info', fmt(pick(t.deviceOut || ['{name} 拔了。']), { name: (data.names || []).join('、') }), null, { face: 'aside', hold: 3200 })
+    }
+    if (data.type === 'power') {
+      const pool = data.state === 'ac' ? (t.powerAc || ['来电了。']) : (t.powerBattery || ['电池了。'])
+      return this.say('info', pick(pool), null, { face: pick(['calm', 'smug']), hold: 3400 })
+    }
+    if (data.type === 'cpu') {
+      return this.say('info', fmt(pick(t.cpuHot || ['机器有点烫。{load} 了。']), { load: String(data.load) }), null, { face: pick(['wide', 'flinch']), hold: 3800 })
+    }
+    if (data.type === 'peek') {
+      return this.say('info', pick(t.peek || ['那边窗口有点动静。']), null, { face: pick(['look', 'smug']), hold: 2600 })
+    }
+  }
+
   clickTalk() {
     const pool = [];
     if (this.quotaText) pool.push({ kind: 'quota', text: this.quotaText });

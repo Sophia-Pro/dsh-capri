@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('host', {
   quit: () => ipcRenderer.send('app:quit'),
   onIdle: on('capri:idle'),
   onBlur: on('capri:blur'),
+  onAmbient: on('capri:ambient'),
   setFocusable: (on) => ipcRenderer.send('overlay:focusable', Boolean(on)),
   installHooks: () => ipcRenderer.invoke('hooks:install'),
   claudeFound: () => ipcRenderer.invoke('claude:found'),
