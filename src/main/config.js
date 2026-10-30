@@ -31,7 +31,8 @@ const DEFAULTS = {
   autostart: false,   // 开机自启
   followDsh: true,
   ambient: true,   // 设备/电源/负载感知 + 偷看屏幕
-  peek: true,      // 时不时朝活动窗口探一眼    // 跟着 DSH 走：DSH 起来她也起来（靠桥插件拉起）
+  peek: true,
+  followMouse: false, // 跟鼠标：她贴着你光标走，偶尔抢一下电你      // 时不时朝活动窗口探一眼    // 跟着 DSH 走：DSH 起来她也起来（靠桥插件拉起）
 };
 
 let cache = null;

@@ -77,6 +77,27 @@ async function boot() {
 
   // 动作音效：只给原本没声音的动作补，避免和 onCue 里的音重复
   const ACT_CUES = {
+    spin: 'whirl',
+    hop: 'zip',
+    glare: 'hiss',
+    head: 'tick',
+    smear: 'whirl',
+    stand: 'tick',
+    sit: 'tap',
+    peek: 'tick',
+    sleep: 'sigh',
+    talk: 'blip',
+    curious: 'tick',
+    look: 'tick',
+    gaze: 'tick',
+    uplink: 'star',
+    victory: 'done',
+    zap: 'bolt',
+    dive: 'teleport-out',
+    split: 'glitch',
+    alarm: 'alert',
+    land: 'land',
+    fall: 'zip',
     grabbed: 'zip',
     held: 'purr',
     tumble: 'slam',
@@ -557,6 +578,30 @@ async function boot() {
     idleWanted = false;
     capri.stow();
   }, 4000);
+
+  // 跟鼠标：她贴着光标走，靠近了偶尔"抢"一下（红色电弧 + 台词）
+  let lastZapAt = 0;
+  setInterval(async () => {
+    if (!cfgNow.followMouse || cfgNow.quiet || capri.stowed || capri.busy) return;
+    if (settings?.isOpen() || balanceCard?.visible) return; // 菜单/卡片开着别乱跑
+    try {
+      const p = await host.cursor?.();
+      if (!p || !p.inside) return;
+      const targetX = capri.clampX(p.x);
+      const dx = p.x - capri.pos.x;
+      const near = Math.abs(dx) < 160 && Math.abs(p.y - capri.pos.y) < 300;
+      capri.faceToward?.(p.x);
+      if (!near) {
+        // 远了就小步挪过去（瞬移到光标附近，但留一点身位）
+        const side = dx > 0 ? -1 : 1;
+        capri.teleport({ x: capri.clampX(p.x + side * 70), y: capri.floor });
+      } else if (Date.now() - lastZapAt > 9000) {
+        lastZapAt = Date.now();
+        try { capri.zap(p.x, p.y) } catch { /* 忽略 */ }
+        if (Math.random() < 0.5) brain.say('info', pick(brain.t.mouse || brain.t.idle), null, { face: 'smug', hold: 2200, force: true });
+      }
+    } catch { /* 忽略 */ }
+  }, 900);
 
   // 按时间段换性格：深夜安静、上午精神、白天正常、傍晚略活跃
   function timePhase() {
