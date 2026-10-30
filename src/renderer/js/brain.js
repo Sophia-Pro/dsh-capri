@@ -83,10 +83,30 @@ export class Brain {
     return [...this.sessions.values()].filter((s) => s.working);
   }
 
+  // 台词的"表情/动作"联动：说完接一个小动作，别只是干说
+  react(kind, extra = {}) {
+    if (extra && extra.noAct) return
+    const capri = this.capri
+    if (!capri || capri.busy || capri.stowed) return
+    const pool = {
+      done: ['victory', 'hop', 'spin'],
+      error: ['huff', 'shake', 'drained'],
+      alert: ['leap', 'alarm', 'flinch'],
+      work: ['look', 'glare', 'crouch'],
+      info: ['look', 'gaze', 'curious', 'spin', 'glare'],
+      idle: ['look', 'curious', 'spin', 'hop', 'glare'],
+    }[kind]
+    if (!pool) return
+    const chance = kind === 'done' ? 0.55 : kind === 'error' ? 0.45 : 0.22
+    if (Math.random() > chance) return
+    try { capri.perform?.(pick(pool)) } catch { /* 演不出来就算了 */ }
+  }
+
   say(kind, line, s, extra = {}) {
     // 标签只放项目名：会话标题是一整句话，塞进气泡右上角会显得莫名其妙
     const tag = s ? String(s.project || '').slice(0, 18) : '';
     this.panel.say({ kind, line, tag, ...extra });
+    this.react(kind, extra);
   }
 
   handle(evt) {
@@ -148,7 +168,9 @@ export class Brain {
     const lines = evt.source === 'resume' ? this.t.resume : this.t.hello;
     this.voice.play('hello');
     this.capri.perform('curious', this.capri.towardCenter());
-    this.say('info', fmt(pick(lines), { project: s.project }), s, { face: pick(['grin', 'look']), hold: 3200 });
+    const hour = new Date().getHours();
+    const lines2 = hour >= 23 || hour < 5 ? (this.t.night || lines) : hour < 11 ? (this.t.day || lines) : lines;
+    this.say('info', fmt(pick(lines2), { project: s.project }), s, { face: pick(['grin', 'look']), hold: 3200 });
   }
 
   onPrompt(evt, s) {
@@ -325,9 +347,12 @@ export class Brain {
     const pool = [];
     if (this.quotaText) pool.push({ kind: 'quota', text: this.quotaText });
     if (this.tokensText) pool.push({ kind: 'tokens', text: this.tokensText });
-    pool.push({ kind: 'status' }, { kind: 'status' }, { kind: 'idle' });
+    pool.push({ kind: 'chatter' }, { kind: 'chatter' }, { kind: 'chatter' }, { kind: 'status' }, { kind: 'idle' });
     const hit = pick(pool);
     if (hit.kind === 'status') return this.status();
+    if (hit.kind === 'chatter') {
+      return this.say('info', pick(this.t.chatter || this.t.idle), null, { face: pick(['smug', 'look', 'aside', 'laugh']), hold: 3200 });
+    }
     if (hit.kind === 'idle') return this.say('info', pick(this.t.idle), null, { face: pick(['calm', 'smug', 'aside']), hold: 2800 });
     return this.say('info', hit.text, null, { face: 'look', hold: 3600 });
   }
