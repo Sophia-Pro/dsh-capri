@@ -17,6 +17,8 @@
 
 <br>
 
+<a href="https://github.com/Sophia-Pro/dsh-capri/releases">全部版本</a>
+&nbsp;·&nbsp;
 <a href="使用说明.md">使用说明</a>
 &nbsp;·&nbsp;
 <a href="玩法.md">玩法与动画</a>
