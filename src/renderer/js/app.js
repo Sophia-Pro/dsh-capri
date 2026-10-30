@@ -414,12 +414,19 @@ async function boot() {
       replayIntro: () => playEntrance(),
       heldOnce: () => { capri.perform('held'); setTimeout(() => capri.endAct?.(true), 2600); },
       possessOnce: async () => {
-        if (!capri.canPossess()) {
-          const seat = capri.pickSeat();
-          if (seat) await capri.sitOn(seat);
+        // 手动点的就给她开一次：安静模式也不拦
+        const before = capri.possessWindows;
+        capri.possessWindows = true;
+        try {
+          if (!capri.canPossess()) {
+            const seat = capri.pickSeat();
+            if (seat) await capri.sitOn(seat);
+          }
+          if (capri.canPossess()) await capri.possess();
+          else panel.say({ kind: 'info', line: '这会儿没窗口可附，宿主。', hold: 3500, force: true });
+        } finally {
+          capri.possessWindows = before;
         }
-        if (capri.canPossess()) capri.possess();
-        else panel.say({ kind: 'info', line: '这会儿没窗口可占，宿主。', hold: 3500 });
       },
       screenPossess: () => capri.screenPossess(),
       satellite: () => watchSatellite(),

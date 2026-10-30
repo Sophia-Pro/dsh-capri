@@ -113,7 +113,7 @@ export class Settings {
     item('全部演一遍', '', () => this.commands.showAll?.())
     item('重播开场', '', () => this.commands.replayIntro?.())
     item('被抱起', '', () => this.commands.heldOnce?.())
-    item('附身看看', '', () => this.commands.possessOnce?.())
+    item('附身窗口', '', () => this.commands.possessOnce?.())
     item('全屏附身', '', () => this.commands.screenPossess?.())
     item('看卫星', '', () => this.commands.satellite?.())
     item('音效试听', '', () => this.commands.soundTour?.())
@@ -146,6 +146,18 @@ export class Settings {
 
   placeMenu(m, at) {
     const r = m.getBoundingClientRect()
+    const head = this.capri && this.capri.head ? this.capri.head() : null
+    if (head) {
+      // 紧贴她：优先头顶上方，横向以她的头为准，绝不住她身上压
+      let top = head.top - r.height - 8
+      if (top < 8) top = head.y + 40
+      let left = head.x - r.width / 2
+      left = Math.max(8, Math.min(left, innerWidth - r.width - 8))
+      top = Math.max(8, Math.min(top, innerHeight - r.height - 8))
+      m.style.left = Math.round(left) + 'px'
+      m.style.top = Math.round(top) + 'px'
+      return
+    }
     const box = this.capriBox()
     let left
     let top

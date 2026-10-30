@@ -62,17 +62,14 @@ export class Card {
     let left
     let top
     if (c) {
-      const cx = c.pos.x
-      const feet = c.pos.y
-      const boxTop = feet - 470 * c.scale
-      const boxLeft = cx - 150 * c.scale
-      const boxRight = cx + 150 * c.scale
-      top = boxTop - r.height - 12
-      if (top < 8) top = feet - r.height - 30
+      const head = c.head ? c.head() : null
+      const cx = head ? head.x : c.pos.x
+      const topY = head ? head.top : c.pos.y - 470 * c.scale
+      top = topY - r.height - 10
+      if (top < 8) top = c.pos.y - r.height - 40
       if (top < 8) top = 8
-      left = cx > innerWidth / 2 ? boxLeft - r.width - 14 : boxRight + 14
-      if (left < 8) left = boxRight + 14
-      if (left + r.width > innerWidth - 8) left = boxLeft - r.width - 14
+      left = cx - r.width / 2
+      left = Math.max(8, Math.min(left, innerWidth - r.width - 8))
     } else {
       left = innerWidth / 2 - r.width / 2
       top = innerHeight / 2 - r.height / 2
