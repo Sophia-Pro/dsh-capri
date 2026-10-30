@@ -1,0 +1,7 @@
+# dsh-capri —— 把摩羯挂到 DSH 的网页里
+# 安装：dsh plugin --profile <你的 profile> add link:<这个目录的绝对路径>
+# 装完重启 DSH；插件会把自己注入进页面，右下角就多了一只会动的她。
+
+- insert:
+    - id: dsh-capri
+      name: dsh-capri

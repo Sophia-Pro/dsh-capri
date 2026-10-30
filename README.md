@@ -1,106 +1,126 @@
-<div align="center">
+# 摩羯 · dsh-capri
 
-# 摩羯 <sub>· dsh-capri</sub>
+她叫摩羯，一个住在 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 页面里的桌宠插件。
 
-**DeepSeek Harness 的桌面挂件 + 桥插件 · macOS · 全中文**
+**这不是一个软件。** 不用装 App、不用签名、不用给辅助功能权限、不用重启系统。装一个插件，DSH 页面右下角就多了一只会动、会说话、会跟着你干活演出的她。
 
-<img src="docs/media/badge-macos.svg" alt="macOS arm64">
-<img src="docs/media/badge-dsh.svg" alt="DSH">
-<img src="docs/media/badge-zh.svg" alt="中文">
-<img src="docs/media/badge-license.svg" alt="非商业">
+- 只活在 DSH 自己的窗口里（纯插件，跨平台：DSH 能跑的地方她就能跑）
+- 干活时播报、出错时红屏、干完庆祝、要你点头时跑过来喊你
+- 报余额、报本轮 token、报阶段
+- 点她说话；右键改设置；DSH 页面五分钟没操作，她自己收起来
 
-<br><br>
-
-<a href="https://github.com/Sophia-Pro/dsh-capri/releases/download/v0.1.0/MoJie-0.1.0-macOS-arm64.zip"><b>⬇ 挂件（macOS arm64，98MB）</b></a>
-&nbsp;·&nbsp;
-<a href="https://github.com/Sophia-Pro/dsh-capri/releases/download/v0.1.0/MoJie-DSH-Plugin-0.1.0.zip"><b>⬇ DSH 插件（9KB）</b></a>
-
-<br>
-
-<a href="使用说明.md">使用说明</a>
-&nbsp;·&nbsp;
-<a href="玩法.md">玩法与动画</a>
-&nbsp;·&nbsp;
-<a href="NOTICE.md">来源与致谢</a>
-
-</div>
-
-<p align="center">
-  <img src="docs/media/hero-2.jpg" alt="开场：她抓住你的屏幕边缘说嗨" width="820">
-</p>
+> 想要"能坐在别的软件窗口上、全屏附身"的那版？那是上一代的 Electron 挂件，源码留在 [`legacy/`](legacy/)，但不再推荐安装。
 
 ---
 
-## 她做什么
+## 安装
 
+先确认你的 DSH 能跑（桌面版或 `dsh web` 都行），然后在终端里：
 
-## 会动的
+```sh
+# 本地目录安装（从源码）
+dsh plugin --profile desktop add link:/绝对路径/到/这个仓库
 
-**开场** —— 三种随机：抓屏幕的大近景 / 大头照「嗨」/ 小动作入场。
-
-<p align="center"><img src="docs/media/intro-2.gif" alt="开场动画" width="720"></p>
-
-**全屏附身** —— 整块屏幕变成她的脸，两秒后松开。
-
-<p align="center"><img src="docs/media/screen-possess-2.gif" alt="全屏附身" width="720"></p>
-
-**附身窗口** —— 坐久了钻进去，整扇窗长满她的眼睛和锯齿嘴：
-
-
-**全屏附身** —— 整块屏幕变成她的脸，两秒后松开：
-
-
-**看卫星** —— 她抬头、夜空铺开、卫星划过、红光照上去：
-
-
-**开场动画**（三套随机）：大头照「嗨」/ 双手撑住屏幕边缘的大近景 / 小动作入场。
-
-
-## 所有动画
-
-37 个动作、三种开场、附身/全屏附身/看卫星这些大场面，以及每一个怎么触发，都写在全表里了：
-
-<p align="center"><img src="docs/media/acts-2.jpg" alt="全部动作" width="760"></p>
-
-**[→ 玩法与动画一览](玩法.md)**
-
-## 和 DSH 的关系
-
-`dsh-plugin/` 是桥插件：装进 DeepSeek Harness 后，DSH 里新的一轮、某个工具、等你批准、干完、烧了多少 token，都会变成她的话和动作（面板里那个「琢磨：…」就是她看见你在想什么）。
-
-从 [Release](https://github.com/Sophia-Pro/dsh-capri/releases/tag/v0.1.0) 下 `MoJie-DSH-Plugin-0.1.0.zip` 解压，或者直接用仓库里的 `dsh-plugin/`：
-
-```bash
-cd dsh-plugin && npm install
-dsh plugin --profile desktop add link:"$PWD"
+# 或者以后发布到 npm 之后
+dsh plugin --profile desktop add dsh-capri
 ```
 
-装完重启一次 DSH。她的挂件也可以独立运行，不装插件只是少这些联动。
+**装完重启 DSH**（插件是宿主启动时装载的，页面刷新不够）。重启后页面右下角就会出现她，第一次来会演一段开场。
 
-## 快速开始（从源码跑）
+卸载：
 
-```bash
-git clone https://github.com/Sophia-Pro/dsh-capri.git
-cd dsh-capri
-npm install
-npm start                    # 先看能不能出人
-
-./scripts/capri-build.sh . ~/Applications/摩羯.app   # 打包成 .app
+```sh
+dsh plugin --profile desktop remove dsh-capri
 ```
 
-完整说明见 [使用说明.md](使用说明.md)，动画和玩法细表见 [玩法.md](玩法.md)：托盘菜单每一项、双击/单击、音效、跟随 DSH 启停、常见问题。
+她的设置存在 `~/.dsh/capri.json`，删掉就回到默认。
 
-## 特性一览
+---
 
-- **窗口交互**：坐上沿 / 骑窗 / 掉下来 / 附身 / 全屏附身；视频和全屏应用不坐
-- **自适应**：按屏幕分辨率和缩放自动算大小；显示器增删、分辨率变化会重新收进可视区
-- **互动**：单击随机说话（余额 / token / 进度 / 闲话），双击从所有动画里随机演一段（没演过的优先）
-- **演技**：37 个动作（含从上游移植的蹲、瞪、被抱起、躺平、翻滚、过热…）、三种开场、全部音效为 Web Audio 实时合成
-- **不抢焦点**：不占 Dock、不进 Cmd-Tab，点她不会把整个程序提到前台
-- **中文化**：界面、台词、托盘、气泡全中文
+## 怎么玩
 
-## 版权
+| 操作 | 结果 |
+| --- | --- |
+| 左键点她 | 说话：报余额 / token / 手上有啥活 / 没事干的时候瞎扯一句 |
+| 双击她 | 随机演一段（所有动作、开场、附身、看卫星都在池子里） |
+| 右键点她 | 菜单（见下） |
+| 拖她 | 抱起来放到别处 |
 
-二次开发项目，原作 [mochiiwuff/capri-desktop](https://github.com/mochiiwuff/capri-desktop)，基于 [Stefanospi/Carpi-Evolution](https://github.com/Stefanospi/Carpi-Evolution)。来源、改动清单与致谢见 [NOTICE.md](NOTICE.md)。
+右键菜单：
 
-许可证沿用上游：可自由使用、修改、分发，**不得售卖或用于付费服务**。角色与美术素材版权属于原权利人，本项目为同人作品。
+- **安静模式** — 打开以后她不乱走、不看卫星、不随机演出，只剩呼吸和说话。想要"别乱动"就开这个。
+- **空闲收起** — 页面多久没操作把她收进右下角小芯片。默认 5 分钟，点一下在 5 / 10 / 关 之间切。鼠标一动她就出来。
+- **站左边 / 站右边** — 换个边待着（默认右边）。
+- **全部演一遍** — 所有动作按顺序演给你看。
+- **重播开场** — 三套开场随机来一套。
+- **音效试听** — 23 个音效挨个响，报名字。
+- **收起来 / 叫她出来** — 立刻收进芯片 / 叫回来。
+
+DSH 里发生的事她都会跟着来事：
+
+- 开工（你发消息）→ 精神起来，报一句在干什么
+- 调工具 → 一行播报在工具气泡里跟着走（Bash / Read / Edit / Grep …）
+- 出错 → 红屏 + 报错行
+- DSH 等你点头 → 她跑过来喊你
+- 干完 → 庆祝 + 把回答摘要端出来
+- 余额 / 本轮 token / 阶段 → 便签形式报给你；余额每 60 秒最多一次
+
+---
+
+## 它到底怎么跑起来的
+
+小厂做法，两层：
+
+1. **宿主半区（`lib/`）**：一个 cordis 插件。订阅 `session/event`、`subagent/*`，把 DSH 的事件翻译成"她看得懂的 hook 事件"，挂在自己的 SSE 上；顺手把她的图片、字体、页面脚本用宿主自带的 webServer 挂成路由；再从宿主那里拿一次页面注入表，往 DSH 的 DOM 里塞一个 `<script>`。
+2. **页面半区（`client/`）**：原来那套渲染层（WebGL 她本人、全屏特效层、动作表、台词、WebAudio 音效）几乎原样搬过来，只把"Electron 主进程那套 API"换成了 HTTP/SSE 的适配层（`client/boot.js` 里的 `window.host`）。
+
+她画在一块全屏透明画布上：只有她身体的像素接管指针，其余地方鼠标点击照常穿透到 DSH 界面。
+
+```
+lib/index.js    宿主半区：路由、SSE、配置、注入
+lib/bridge.js   会话事件 → 她的 hook 事件
+client/boot.js  页面入口：造 DOM、注入样式、window.host 适配、右键菜单、安静模式、空闲收起
+client/*.js     她本人（capri / acting / fx / sprite / lines / voice / brain / chip）
+assets/         她的画、切图、字体
+test/           接线测试（不起 DSH 也能跑）
+```
+
+---
+
+## 开发
+
+```sh
+node --test test/*.test.mjs     # 接线测试：路由、注入行、事件桥、栅栏
+```
+
+改 `client/` 里的东西不用重启 DSH，刷新页面即可（脚本是按请求读盘的）。改 `lib/` 要重启。
+
+想离线试页面那半边：起一个假宿主（照 `lib/index.js` 的几条路由实现）用 Chrome 打开，页面里就能调试；`/capri/self-test` 可以手工塞一条假事件进事件流。
+
+---
+
+## 和上一版的区别
+
+| | 上一版（v0.1，`legacy/`） | 这一版 |
+| --- | --- | --- |
+| 形态 | Electron 应用，要装、要签名 | DSH 插件，一条命令 |
+| 平台 | 只有 macOS | DSH 能跑就行（macOS / Windows / Linux） |
+| 她待在哪 | 桌面，能坐别人窗口 | DSH 窗口里（右下角/左边） |
+| 全屏附身、坐窗口 | 有 | 没有（浏览器画不到别人的窗口上） |
+| 安静模式 / 空闲收起 | 没有 | 有 |
+
+动作、台词、音效、开场、特效全部保留。
+
+---
+
+## 上游
+
+原作 [mochiiwuff/capri-desktop](https://github.com/mochiiwuff/capri-desktop)，上一版基于 [Stefanospi/Carpi-Evolution](https://github.com/Stefanospi/Carpi-Evolution)。角色「Capri」、Sprite 着色器、动作与美术都出自上游；本仓库从上游移植了 12 个动作，并把整套渲染层改造成 DSH 插件。
+
+上游在 2026-10-27 / 10-28 更新了 11 个提交（Ollama 免费云模型、看屏幕、感知 CPU/电池/网络/USB/游戏、找文件、放歌、开 Roblox 等）。这些是**她自己那套聊天与桌面感知**的能力，和本项目"接 DSH 当大脑"的路线重复，因此没有采纳；那批提交没有改动动作/动画文件，所以也没有新动作可搬。以后上游再有动作或特效更新，可以继续搬。
+
+来源、改动清单与致谢见 [NOTICE.md](NOTICE.md)。
+
+## 许可
+
+沿用上游：可自由使用、修改、分发，**不得售卖或用于付费服务**，需保留原作者署名（见 [LICENSE](LICENSE)）。角色与美术素材版权属于原权利人，本项目为同人作品。
