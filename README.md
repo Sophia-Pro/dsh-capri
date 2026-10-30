@@ -11,9 +11,9 @@
 
 <br><br>
 
-<a href="https://github.com/Sophia-Pro/dsh-capri/releases/download/v0.1.0/MoJie-0.1.0-macOS-arm64.zip"><b>⬇ 挂件（macOS arm64，98MB）</b></a>
+<a href="https://github.com/Sophia-Pro/dsh-capri/releases/download/v0.2.0/MoJie-0.2.0-macOS-arm64.zip"><b>⬇ 挂件 v0.2.0（macOS arm64）</b></a>
 &nbsp;·&nbsp;
-<a href="https://github.com/Sophia-Pro/dsh-capri/releases/download/v0.1.0/MoJie-DSH-Plugin-0.1.0.zip"><b>⬇ DSH 插件（9KB）</b></a>
+<a href="https://github.com/Sophia-Pro/dsh-capri/releases/download/v0.2.0/MoJie-DSH-Plugin-0.2.0.zip"><b>⬇ DSH 插件 v0.2.0</b></a>
 
 <br>
 

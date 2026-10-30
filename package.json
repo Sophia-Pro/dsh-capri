@@ -1,19 +1,22 @@
 {
   "name": "capri-desktop",
   "version": "0.2.0",
-  "description": "Capri, the Project Capricorn construct, living on your desktop and narrating what Claude Code is doing.",
-  "author": "mochiiwuff",
-  "repository": "github:mochiiwuff/capri-desktop",
+  "description": "摩羯 · DeepSeek Harness 的 macOS 桌面挂件（含 DSH 桥插件 dsh-plugin/）",
+  "author": "Sophia-Pro",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sophia-Pro/dsh-capri.git"
+  },
   "main": "src/main/main.js",
   "private": true,
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
     "demo": "node scripts/demo.js",
-    "test": "node --test tests/router-client.test.js tests/brain-ask.test.mjs",
+    "test": "node --test dsh-plugin/test/plugin.test.mjs",
     "hooks:install": "node scripts/install-hooks.js",
     "hooks:uninstall": "node scripts/install-hooks.js --uninstall",
-    "dist": "electron-builder --win"
+    "dist": "echo \"用 ~/Applications/capri-build.sh 打 .app；发布包用 ditto 压缩\""
   },
   "keywords": [
     "claude-code",
@@ -61,5 +64,6 @@
       "shortcutName": "Capri",
       "artifactName": "Capri-Setup-${version}.${ext}"
     }
-  }
+  },
+  "homepage": "https://github.com/Sophia-Pro/dsh-capri"
 }
