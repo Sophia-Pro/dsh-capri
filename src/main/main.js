@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('node:path');
+const { execFile } = require('node:child_process');
 const fs = require('node:fs');
 const { pathToFileURL } = require('node:url');
 const {
@@ -200,6 +201,37 @@ function rendererConfig() {
 }
 
 // 「跟随 DSH」：标记文件 ~/.capri-follow-dsh，DSH 的桥插件启动时看到它就把她拉起来
+// DSH 在不在：按主进程可执行文件找（DSH 窗口/端口每次都可能不同，按进程最稳）
+let dshMisses = 0;
+function dshRunning() {
+  return new Promise((resolve) => {
+    // 注意：macOS 的 pgrep -f 对带空格的完整路径经常匹配不到，直接用 ps 数
+    execFile('/bin/ps', ['-Ao', 'args'], { timeout: 2500, maxBuffer: 8 * 1024 * 1024 }, (err, stdout) => {
+      if (err) { resolve(false); return }
+      const needle = 'DeepSeek Harness.app/Contents/MacOS/DeepSeek Harness'
+      const hit = String(stdout || '').split('\n').some((line) => line.includes(needle))
+      resolve(hit)
+    })
+  })
+}
+
+// 「跟随 DSH」：DSH 退出她也退出（启动那半边由 DSH 的桥插件负责拉起她）
+function startFollowExitWatch() {
+  setInterval(async () => {
+    try {
+      const cfg = config.load()
+      if (!cfg.followDsh) { dshMisses = 0; return }
+      const alive = await dshRunning()
+      if (alive) { dshMisses = 0; return }
+      dshMisses += 1
+      if (dshMisses >= 3) {
+        console.log('[capri] DSH 已经退出，跟着收工');
+        app.quit();
+      }
+    } catch { /* 忽略 */ }
+  }, 8000);
+}
+
 function syncFollowFlag(cfg) {
   const flag = path.join(app.getPath('home'), '.capri-follow-dsh');
   try {

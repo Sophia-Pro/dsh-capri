@@ -102,35 +102,6 @@ function addSpend(cost, tokens) {
   return led
 }
 
-// 历史消耗：DSH 里装了鲸鱼挂件的话，它有一份按天的用量账本（连页面端、重启前的都算），
-// 直接拿来当"今日已用"的来源；没有再用我们自己的账本。
-const WHALE_LEDGERS = [
-  path.join(DSH_HOME, '.dshw-usage.json'),
-  path.join(DSH_HOME, 'profiles', 'web', '.dshw-usage.json'),
-]
-
-function readHistoryToday() {
-  const day = todayKey()
-  for (const file of WHALE_LEDGERS) {
-    try {
-      const data = JSON.parse(fs.readFileSync(file, 'utf8'))
-      const events = Array.isArray(data && data.events) ? data.events : []
-      if (!events.length) continue
-      let cost = 0
-      let tokens = 0
-      let turns = 0
-      for (const e of events) {
-        if (!e || e.day !== day) continue
-        cost += Number(e.cost) || 0
-        tokens += Number(e.tokens) || 0
-        turns += 1
-      }
-      return { cost, tokens, turns, source: file }
-    } catch { /* 没有这份账本 */ }
-  }
-  return null
-}
-
 // 今天的起点余额：当天第一次看到余额时记下来，之后的余额差就是"今天花掉的"
 function noteDayStart(amount, currency) {
   const day = todayKey()
@@ -345,13 +316,10 @@ export function apply(ctx, rawConfig = {}) {
     const next = nextPeakChangeAt(nowSec)
     const bal = balance || null
     const led = readLedger()
-    const hist = readHistoryToday()
-    // 自己记的账本为主；打开时先看一眼"今天的起点余额"，用余额差兜住开机之前的消耗。
-    // 有 DSH 用量账本（鲸鱼挂件）时，它的历史更全，取三者最大，宁多算不少算。
+    // 只用自己的账：自己按轮累计的花费；开机之前那段用"当天起点余额差"兜住，两者取大
     const own = Number(led.cost) || 0
     const byBalance = bal ? balanceSpentToday(bal.amount) : 0
-    const byHistory = hist ? Number(hist.cost) || 0 : 0
-    const today = Math.max(own, byBalance, byHistory)
+    const today = Math.max(own, byBalance)
     return {
       ok: true,
       version: pkgVersion,
@@ -359,9 +327,9 @@ export function apply(ctx, rawConfig = {}) {
       balance: bal ? bal.amount : null,
       currency: bal ? bal.currency : 'CNY',
       today,
-      tokensToday: Math.max(Number(led.tokens) || 0, hist ? Number(hist.tokens) || 0 : 0),
-      turnsToday: Math.max(Number(led.turns) || 0, hist ? Number(hist.turns) || 0 : 0),
-      todaySource: byHistory >= own ? 'history' : (byBalance > own ? 'balance' : 'ledger'),
+      tokensToday: Number(led.tokens) || 0,
+      turnsToday: Number(led.turns) || 0,
+      todaySource: byBalance > own ? 'balance' : 'ledger',
       peak,
       period: peak ? 'peak' : 'valley',
       peakHours: '9:00–12:00 / 14:00–18:00',

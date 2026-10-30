@@ -318,7 +318,7 @@ export class Settings {
 
     // —— 系统 ——
     section('系统')
-    toggle('跟随 DSH 启动', 'followDsh', 'DSH 起来她也起来（需安装桥插件）')
+    toggle('跟随 DSH 启动与退出', 'followDsh', 'DSH 起来她也起来，DSH 关掉她也关掉')
     toggle('开机自启', 'autostart')
 
     // —— 气泡 ——
