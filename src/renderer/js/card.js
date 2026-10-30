@@ -27,9 +27,10 @@ function hms(ms) {
 }
 
 export class Card {
-  constructor({ capri, onRefresh } = {}) {
+  constructor({ capri, onRefresh, onClose } = {}) {
     this.capri = capri
     this.onRefresh = onRefresh
+    this.onClose = onClose
     this.root = null
     this.data = null
     this.timer = null
@@ -52,7 +53,23 @@ export class Card {
 
   hide() {
     if (this.timer) { clearInterval(this.timer); this.timer = null }
-    if (this.root) { this.root.remove(); this.root = null }
+    if (this._follow) { clearInterval(this._follow); this._follow = null }
+    this.unbindClose()
+    if (this.root) { this.root.remove(); this.root = null; this.onClose?.() }
+  }
+
+  // 点别处/按 Esc 就收起来（整层这时是接鼠标的，点哪都能收到）
+  bindClose() {
+    this.unbindClose()
+    this._outside = (e) => { if (this.root && !this.root.contains(e.target)) this.hide() }
+    this._esc = (e) => { if (e.key === 'Escape') { this.hide(); e.preventDefault() } }
+    document.addEventListener('pointerdown', this._outside, true)
+    document.addEventListener('keydown', this._esc)
+  }
+
+  unbindClose() {
+    if (this._outside) { document.removeEventListener('pointerdown', this._outside, true); this._outside = null }
+    if (this._esc) { document.removeEventListener('keydown', this._esc); this._esc = null }
   }
 
   place() {
@@ -116,6 +133,7 @@ export class Card {
     document.body.appendChild(root)
     this.root = root
     this.place()
+    this.bindClose()
 
     const tick = () => {
       const cd = root.querySelector('.capri-card__cd')

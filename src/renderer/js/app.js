@@ -391,7 +391,7 @@ async function boot() {
   const guide = new Guide({ capri, panel, voice, host, brain });
   // the first Claude Code event that ever reaches her: so you know it worked
   // ---------- 右键菜单 / 设置面板 ----------
-  balanceCard = new Card({ capri, onRefresh: () => showBalance() });
+  balanceCard = new Card({ capri, onRefresh: () => showBalance(), onClose: () => refreshHit() });
   const showBalance = async () => {
     panel.hide();
     balanceCard.show({ pending: true });
